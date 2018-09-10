@@ -27,7 +27,7 @@ class God(object):
         self.white = imp.load_source('AI', white_path).AI(self.chessboard_size, 1, self.time_out)
         self.black = imp.load_source('AI', black_path).AI(self.chessboard_size, -1, self.time_out)
         self.user_color_map = {white_path.split("/")[-1].split(".")[0]: 1, black_path.split("/")[-1].split(".")[0]: -1}
-        self.color_user_map = {1: white_path.split("/")[-1].split(".")[0], -1: black_path.split("/")[-1].split(".")[0], 0: 0}
+        self.color_user_map = {1: int(white_path.split("/")[-1].split(".")[0]), -1: int(black_path.split("/")[-1].split(".")[0]), 0: 0}
         self.start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         self.end_time = -1
         self.begin = (self.color_user_map[1], self.color_user_map[-1])

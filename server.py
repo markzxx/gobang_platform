@@ -157,11 +157,13 @@ async def add_game_log(white, black):
     return id
 
 async def update_game_log(game_id, winner, loser):
+    print("update_game_log", game_id, winner, loser)
     async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute("update game_log set winner={}, loser={}, end_time={} where id = {}".format(winner, loser, int(time.time()), game_id))
+        await db.execute("update game_log set winner={}, loser={}, end_time={} where id={}".format(winner, loser, int(time.time()), game_id))
         await db.commit()
         
 async def update_chess_log(game_id):
+    print("update_chess_log", games[game_id]['chess_log'])
     async with aiosqlite.connect(DB_NAME) as db:
         await db.executemany("insert into chess_log values(%s,%s,%s,%s,%s)", games[game_id]['chess_log'])
         await db.commit()
@@ -181,7 +183,7 @@ async def finish(soid, data):
     await sio.emit('finish', data[4], room=data[0])
     await sio.emit('finish', data[4], room=data[1])
     game_id = players[data[0]]
-    await update_game_log(games[game_id], data[4], data[5])
+    await update_game_log(game_id, data[4], data[5])
     await update_chess_log(game_id)
     del games[game_id]
     del players[data[0]]
