@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="static/css/reset.css">
+    <link rel="stylesheet" href="static/css/index.css">
+    <title>Login</title>
+</head>
+
+<body>
+    <h2 class="title">Login</h2>
+    <div class="main-body">
+        <form action="login" method="post" accept-charset="utf-8" onsubmit="return jsMd5();" enctype="multipart/form-data">
+            <span>Student Id</span>
+            <input id="sid" title="sid" name="sid" type="text" value=""/>
+            <span>Password</span>
+            <input id="pwd" title="pwd" name="pwd" type="password" value=""/>
+            <input type="submit" value="submit"/>
+        </form>
+        <br><span>Your first login is a registration.</span>
+    </div>
+    <script src="static/lib/md5.js"> </script>
+    <script>
+    function jsMd5(){
+        var sid = document.getElementById("sid");
+        var pwd = document.getElementById("pwd");
+        if(pwd.value == "" || sid.value == "") {
+            alert("Student id and password should not be empty!")
+            return false;
+        }
+        pwd.value = md5(pwd.value);
+        return true;
+    }
+	</script>
+</body>
+
+</html>
