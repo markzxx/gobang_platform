@@ -51,7 +51,7 @@ class God(object):
     def first_chess(self):
 
         try:
-            timeout(god.time_out)(self.black.first_chess)() #--------------------------------------------------------
+            self.black.first_chess() #--------------------------------------------------------
         except Exception:
             pass
 
@@ -76,13 +76,13 @@ class God(object):
 
         if color ==1:
             try:
-                timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
+                self.white.go(self.last_pos)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.white.candidate_list
         else:
             try:
-                timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
+                self.black.go(self.last_pos)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.black.candidate_list
@@ -172,46 +172,44 @@ if __name__ == '__main__':
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
 
-    god = God(white_path ,black_path ,size , time_interval)
-
-    begin_data = god.begin
+    god = God(white_path, black_path, size, time_interval)
+    begin_data = [int(arg_list[2]), int(arg_list[3])]
     go_data = [begin_data[0], begin_data[1], -1, -1, 0]
-
+    # print("before first", go_data)
     god.first_chess()
     go_data[2] = god.last_pos[0]
     go_data[3] = god.last_pos[1]
     go_data[4] = color_map[-1]
+    # print("after first", go_data)
     socketIO.emit("go", go_data)
     socketIO.wait(seconds=1)
-    #print(go_data)
 
     #see(god.chessboard)
     while not god.finish:
-        god.update(color= 1)
-        if god.finish: break
-        go_data[2] = god.last_pos[0]
-        go_data[3] = god.last_pos[1]
+        time.sleep(0.1)
+        god.update(color=1)
+        go_data[2] = int(god.last_pos[0])
+        go_data[3] = int(god.last_pos[1])
         go_data[4] = color_map[1]
+        # print(go_data)
         socketIO.emit("go", go_data)
-        socketIO.wait(seconds=1)
-        #print(go_data)
         #see(god.chessboard)
-
-        god.update( color=-1)
         if god.finish: break
-        go_data[2] = god.last_pos[0]
-        go_data[3] = god.last_pos[1]
+
+        god.update(color=-1)
+        go_data[2] = int(god.last_pos[0])
+        go_data[3] = int(god.last_pos[1])
         go_data[4] = color_map[-1]
+        # print(go_data)
         socketIO.emit("go", go_data)
-        socketIO.wait(seconds=1)
-        #print(go_data)
         #see(god.chessboard)
+        if god.finish: break
+
 
     god.end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     if god.error:
         error_data = (begin_data[0], begin_data[1], god.error)
         socketIO.emit("error", error_data)
-        socketIO.wait(seconds=1)
         #print(error_data)
 
     finish_data = (begin_data[0], begin_data[1], god.start_time, god.end_time, god.color_user_map[god.winner], god.color_user_map[-god.winner])

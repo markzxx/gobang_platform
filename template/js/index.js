@@ -240,6 +240,8 @@ function clientSocket(socket) {
     });
 
     socket.on('finish', function (winner) {
+        $('.play').text("Play");
+        $('.play').removeAttr("disabled");
         if(winner==0)
             setGameStatus('平局');
         else
@@ -282,14 +284,12 @@ function bindPlayClick(socket) {
     $('.play').click(function (e) {
         var $this = $(this);
         var status = $this.text();
-/*      if (status == 'Play'){
-            $this.text('Stop');
-            $(this).attr("data-name", "play");
-        }else{
-            $this.text('Play');
-            $(this).attr("data-name", "stop");
-        }
-  */
+
+        $this.text('Playing');
+        $this.attr("disabled", "disabled");
+        $(".user-status").attr("disabled", "disabled");
+  
+        socket.emit('watch', $this.data('id'));
         socket.emit('play', {'sid':$this.data('id'), 'action':$this.attr("data-name")});
     });
 
@@ -298,10 +298,11 @@ function bindPlayClick(socket) {
     });
 }
 
-// 绑定申请对战事件
+// 绑定观战事件
 function bindApplyGameClick(socket) {
     $('.user-status').click(function (e) {
         var $this = $(this);
+        $this.addClass('gaming-status');
         socket.emit('watch', $this.data('id'));
     });
 }
@@ -316,7 +317,7 @@ function handlebarsUserList(userList, ownId, socket) {
     $.each(userList, function (index, value) {
         user_template += '<tr><td><p class="user-id">'+value.sid+'</p></td>'
                     +'<td><p class="user-score">'+value.score+'</p></td>'
-                    +'<td><button class="user-status ready" data-id="'+value.sid+'" >ready</button></td></tr>';
+                    +'<td><button class="user-status watch" data-id="'+value.sid+'" >watch</button></td></tr>';
         
     });
     $('.player').html(user_template);
