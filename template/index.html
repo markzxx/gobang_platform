@@ -14,9 +14,14 @@
     <h2 class="title">AI VS Platform</h2>
     <div class="main-body">
         <div class="board">
-            <div>
+            <div> 
+                <p>
+                    <form action="logout" method="get" accept-charset="utf-8" enctype="multipart/form-data">
+                    <span id="sid" data-id={{sid}}>Hello: {{sid}}</span>
+                    <span><button class="logout">logout</button></span>
+                    </form>
+                </p>
                 <form action="upload" method="post" accept-charset="utf-8" enctype="multipart/form-data">
-                    <p id="sid" data-id={{sid}}>Hello: {{sid}}</p>
                     <p id='watch_id' data-id={{sid}} visibility=false></p>
                     <span>Upload Your Code (only one .py file is required)</span>
                     <input type=file id=code name="code" style="visibility:hidden" onchange=filepath.value=this.value>

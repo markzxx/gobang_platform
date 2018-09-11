@@ -24,6 +24,12 @@ class Http_handler:
         else:
             return aiohttp_jinja2.render_template('login.html', request, {})
 
+    @aiohttp_jinja2.template('logout')
+    async def logout(self, request):
+        session = await get_session(request)
+        del session['sid']
+        return aiohttp_jinja2.render_template('login.html', request, {})
+        
     @aiohttp_jinja2.template('login')
     async def login(self, request):
         if request._method == "GET":
@@ -87,6 +93,7 @@ app.router.add_static('/static', 'template')
 app.add_routes([web.get('/', handler.index, name='index'),
                 web.get('/login', handler.login, name='login'),
                 web.post('/login', handler.login, name='login'),
+                web.get('/logout', handler.login, name='logout'),
                 web.post('/upload', handler.upload, name='upload')])
 fernet_key = fernet.Fernet.generate_key()
 secret_key = base64.urlsafe_b64decode(fernet_key)
@@ -162,7 +169,6 @@ async def message(soid, data):
 @sio.on('play')
 async def play(soid, data):
     print(data)
-    print(players)
     if data['sid'] in players:
         await sio.emit('reply', "You are in an unfinished game", soid)
     else:

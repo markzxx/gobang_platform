@@ -261,7 +261,7 @@ class God(object):
     def first_chess(self):
 
         try:
-            timeout(god.time_out)(self.black.first_chess)() #--------------------------------------------------------
+            self.black.first_chess() #--------------------------------------------------------
         except Exception:
             pass
 
@@ -286,13 +286,13 @@ class God(object):
 
         if color ==1:
             try:
-                timeout(god.time_out)(self.white.go)(self.chessboard)#--------------------------------------------------------
+                self.white.go(self.chessboard)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.white.candidate_list
         else:
             try:
-                timeout(god.time_out)(self.black.go)(self.chessboard)#--------------------------------------------------------
+                self.black.go(self.chessboard)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.black.candidate_list
@@ -392,6 +392,7 @@ if __name__ == '__main__':
     finish_data = (begin_data[0], begin_data[1], god.start_time, god.end_time, god.color_user_map[god.winner],
                    god.color_user_map[-god.winner])
     socketIO.emit("finish", finish_data)
+    socketIO.wait(seconds=1)
     # print(finish_data)
 
 
