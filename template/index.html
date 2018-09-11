@@ -17,6 +17,7 @@
             <div>
                 <form action="upload" method="post" accept-charset="utf-8" enctype="multipart/form-data">
                     <p id="sid" data-id={{sid}}>Hello: {{sid}}</p>
+                    <p id='watch_id' data-id={{sid}} visibility=false></p>
                     <span>Upload Your Code (only one .py file is required)</span>
                     <input type=file id=code name="code" style="visibility:hidden" onchange=filepath.value=this.value>
                     <input type=textfield id=filepath>
@@ -27,7 +28,7 @@
             <div class="play-status">
                 <span>Status：</span>
                 <span id="current_status">not Started</span>
-                <span><button class="Go" data-id="{{sid}}" data-name="play">Go</button></span>
+<!--                <span><button class="Go" data-id="{{sid}}" data-name="play">Go</button></span>   -->
                 <span><button class="play" data-id="{{sid}}" data-name="play">Play</button></span>
             </div>
             <canvas id="chessboard"></canvas>

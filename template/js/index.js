@@ -17,9 +17,7 @@ var arrPieces = new Array();
 $(document).ready(function () {
     clientSocket(socket);
     socket.emit('update_list', "update");
-    socket.emit('watch', $("#sid").data('id'));
     bindPlayClick(socket);
-    bindApplyGameClick(socket);
     drawChessBoard();
 });
 
@@ -66,151 +64,6 @@ function drawNewPiece(i, j, isBlack) {
     ctx.fill();
 }
 
-// 点击棋盘进行落子
-function chessClick() {
-    $('#chessboard').click(function (e) {
-        var x = Math.floor(e.offsetX / CHESSBOARD_GRID);
-        var y = Math.floor(e.offsetY / CHESSBOARD_GRID);
-        drawPiece(x, y);
-    })
-}
-
-// 检查棋牌中是否还存在空位
-function checkIsExistEmpty() {
-    var isExistEmpty = false;
-    for (var i = 0; i < CHESS_SIZE; i++) {
-        for (var j = 0; j < CHESS_SIZE; j++) {
-            if (arrPieces[i][j] === 0) {
-                isExistEmpty = true;
-                break;
-            }
-        }
-    }
-    if (!isExistEmpty) {
-        setTimeout(function () {
-            alert('平局!')
-        }, 0);
-    }
-}
-// 落下棋子后检查是否赢得比赛
-function doCheck(x, y) {
-    horizontalCheck(x, y);
-    verticalCheck(x, y);
-    downObliqueCheck(x, y);
-    upObliqueCheck(x, y);
-}
-
-// 游戏结束
-function isOver(x, y, sum) {
-    if (sum === 5) {
-        IS_GAME_OVER = true;
-        setTimeout(function () {
-            alert('Game Over!')
-        }, 0);
-    }
-}
-
-// 横轴方向检测
-function horizontalCheck(x, y) {
-    var sum = -1;
-
-    for (var i = x; i >= 0; i--) {
-        if (arrPieces[i][y] === arrPieces[x][y]) {
-            sum++;
-        } else {
-            i = -1;
-            break;
-        }
-    }
-    for (var i = x; i < CHESS_SIZE; i++) {
-        if (arrPieces[i][y] === arrPieces[x][y]) {
-            sum++;
-        } else {
-            i = CHESS_SIZE;
-            break;
-        }
-    }
-    isOver(x, y, sum);
-}
-
-// 竖轴方向检测
-function verticalCheck(x, y) {
-    var sum = -1;
-
-    for (var j = y; j >= 0; j--) {
-        if (arrPieces[x][j] === arrPieces[x][y]) {
-            sum++;
-        } else {
-            j = -1;
-            break;
-        }
-    }
-    for (var j = y; j < CHESS_SIZE; j++) {
-        if (arrPieces[x][j] === arrPieces[x][y]) {
-            sum++;
-        } else {
-            j = CHESS_SIZE;
-            break;
-        }
-    }
-    isOver(x, y, sum);
-}
-
-// 下斜方向检测
-function downObliqueCheck(x, y) {
-    var sum = -1;
-
-    for (var i = x, j = y; i >= 0 && y >= 0;) {
-        if (arrPieces[i][j] === arrPieces[x][y]) {
-            sum++;
-        } else {
-            j = i = -1;
-            break;
-        }
-        i--;
-        j--;
-    }
-    for (var i = x, j = y; i < CHESS_SIZE && j < CHESS_SIZE;) {
-        if (arrPieces[i][j] === arrPieces[x][y]) {
-            sum++;
-        } else {
-            j = i = CHESS_SIZE;
-            break;
-        }
-        i++;
-        j++;
-    }
-    isOver(x, y, sum);
-}
-
-// 上斜方向检测
-function upObliqueCheck(x, y) {
-    var sum = -1;
-
-    for (var i = x, j = y; i >= 0 && j < CHESS_SIZE;) {
-        if (arrPieces[i][j] === arrPieces[x][y]) {
-            sum++;
-        } else {
-            j = CHESS_SIZE;
-            i = -1;
-            break;
-        }
-        i--;
-        j++;
-    }
-    for (var i = x, j = y; i < CHESS_SIZE && j >= 0;) {
-        if (arrPieces[i][j] === arrPieces[x][y]) {
-            sum++;
-        } else {
-            i = CHESS_SIZE;
-            j = -1;
-            break;
-        }
-        i++;
-        j--;
-    }
-    isOver(x, y, sum);
-}
 
 // 客户端socket
 function clientSocket(socket) {
@@ -219,17 +72,15 @@ function clientSocket(socket) {
     });
 
     socket.on('update_list', function (userList) {
-        console.log(userList);
-        handlebarsUserList(userList, socket.id, socket);
+        handlebarsUserList(userList);
     });
 
     socket.on('push_game', function (gameInfo) {
         drawChessBoard();
-        console.log(gameInfo);
         $.each(gameInfo.chess_log, function (index, value) {
             drawNewPiece(value[1], value[2], value[3]);
         });
-        var status = 'Player: White：' + gameInfo.white +'\t\t\tBlack：' + gameInfo.black;
+        var status = 'Player  White：' + gameInfo.white +'\t\t\tBlack：' + gameInfo.black;
         $('#player-status').text(status);
         setGameStatus('Game Begin');
     });
@@ -243,34 +94,13 @@ function clientSocket(socket) {
         $('.play').text("Play");
         $('.play').removeAttr("disabled");
         if(winner==0)
-            setGameStatus('平局');
+            setGameStatus('Game draw!');
         else
-            setGameStatus('游戏结束，'+winner+'获胜！');
+            setGameStatus('Game finished, '+winner+' WIN！');
     });
 
     socket.on('error', function (info) {
         alert('游戏异常结束，'+info);
-    });
-
-    socket.on('competitorStep', function (info) {
-        var ownInfo = info.ownInfo,
-            stepInfo = info.stepInfo;
-
-        IS_CAN_STEP = ownInfo.currentStep;
-        drawNewPiece(stepInfo.x, stepInfo.y, !ownInfo.isBlack);
-        IS_GAME_OVER = stepInfo.isGameOver;
-        var status = '';
-        if(IS_GAME_OVER) {
-            satus = '游戏结束了。';
-        } else {
-            if(IS_CAN_STEP) {
-                status = '该我下棋了...';
-            } else {
-                status = '等待 ' + COMPETITOR_NAME + ' 下棋中...';
-            }
-        }
-        setGameStatus(status);
-        
     });
 }
 
@@ -289,26 +119,27 @@ function bindPlayClick(socket) {
         $this.attr("disabled", "disabled");
         $(".user-status").attr("disabled", "disabled");
   
-        socket.emit('watch', $this.data('id'));
+        watch($this.data('id'));
         socket.emit('play', {'sid':$this.data('id'), 'action':$this.attr("data-name")});
     });
-
+/*
     $('.Go').click(function (e) {
         socket.emit('test_go', [$('#sid').data('id'), rd(1,15), rd(1,15), rd(0,1)]);
     });
+    */
 }
 
-// 绑定观战事件
-function bindApplyGameClick(socket) {
-    $('.user-status').click(function (e) {
-        var $this = $(this);
-        $this.addClass('gaming-status');
-        socket.emit('watch', $this.data('id'));
-    });
+function watch(sid){
+    $('.user-status').text('watch');
+    $('.user-status').removeClass('gaming-status');
+    $('#'+sid).addClass('gaming-status');
+    $('#'+sid).text('watching');
+    $('#watch_id').data('id', sid);
+    socket.emit('watch', sid);
 }
 
 // 加载在线用户列表
-function handlebarsUserList(userList, ownId, socket) {
+function handlebarsUserList(userList) {
     var user_template = '<tr>'
                         +'<th>Sid</th>'
                         +'<th>Score</th>'
@@ -317,26 +148,15 @@ function handlebarsUserList(userList, ownId, socket) {
     $.each(userList, function (index, value) {
         user_template += '<tr><td><p class="user-id">'+value.sid+'</p></td>'
                     +'<td><p class="user-score">'+value.score+'</p></td>'
-                    +'<td><button class="user-status watch" data-id="'+value.sid+'" >watch</button></td></tr>';
+                    +'<td><button class="user-status" id="'+value.sid+'" >watch</button></td></tr>';
         
     });
     $('.player').html(user_template);
-    bindApplyGameClick(socket);
-}
-
-// 下棋触发socket
-function stepPiece(x, y, isGameOver) {
-    IS_CAN_STEP = false;
-    var status = '等待 ' + COMPETITOR_NAME + ' 下棋中...';
-    if(isGameOver) {
-        status = '游戏结束.'
-    }
-    setGameStatus(status);
-    socket.emit('step', {
-        x: x,
-        y: y,
-        isGameOver: isGameOver
+    $('.user-status').click(function (e) {
+        watch($(this).attr('id'));
     });
+    $('#'+$('#watch_id').data('id')).addClass('gaming-status');
+    $('#'+$('#watch_id').data('id')).text('watching');
 }
 
 // 设置游戏状态

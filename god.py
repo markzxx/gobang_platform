@@ -171,9 +171,10 @@ if __name__ == '__main__':
     black_path = file_dic+'/'+arg_list[3]+'.py'#'./test_AI.py'
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
+    player1 = int(arg_list[6])
 
     god = God(white_path, black_path, size, time_interval)
-    begin_data = [int(arg_list[2]), int(arg_list[3])]
+    begin_data = [player1, int(arg_list[3])]
     go_data = [begin_data[0], begin_data[1], -1, -1, 0]
     # print("before first", go_data)
     god.first_chess()
