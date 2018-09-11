@@ -162,6 +162,7 @@ async def message(soid, data):
 @sio.on('play')
 async def play(soid, data):
     print(data)
+    print(players)
     if data['sid'] in players:
         await sio.emit('reply', "You are in an unfinished game", soid)
     else:

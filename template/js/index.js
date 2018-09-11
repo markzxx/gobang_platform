@@ -10,7 +10,7 @@ var COMPETITOR_NAME = '';    // 对手的昵称
 // 设置canvas的content的
 var ctx = null;
 
-var socket = io('http://10.20.13.19:8080');
+var socket = io('http://10.20.106.72:8080');
 // 棋盘坐标数组
 var arrPieces = new Array();
 

@@ -286,13 +286,13 @@ class God(object):
 
         if color ==1:
             try:
-                timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
+                timeout(god.time_out)(self.white.go)(self.chessboard)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.white.candidate_list
         else:
             try:
-                timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
+                timeout(god.time_out)(self.black.go)(self.chessboard)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.black.candidate_list
