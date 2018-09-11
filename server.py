@@ -74,8 +74,8 @@ class Http_handler:
                 await db.execute("update users set last_update=CURRENT_TIMESTAMP where sid={}".format(sid))
             else:
                 await db.execute("update users set submit_time=CURRENT_TIMESTAMP, last_update=CURRENT_TIMESTAMP where sid={}".format(sid))
-                await update_all_list()
             await db.commit()
+        await update_all_list()
         
         raise self.redirect(request.app.router, 'index')
 
