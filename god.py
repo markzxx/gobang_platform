@@ -167,8 +167,8 @@ if __name__ == '__main__':
     arg_list = sys.argv
     color_map = {-1:1, 1:0}
     file_dic = arg_list[1]
-    white_path = file_dic+'/'+arg_list[2]+'.py'#'./11610999.py'
-    black_path = file_dic+'/'+arg_list[3]+'.py'#'./11610999.py'
+    white_path = file_dic+'/'+arg_list[2]+'.py'#'./test_AI.py'
+    black_path = file_dic+'/'+arg_list[3]+'.py'#'./test_AI.py'
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
 
