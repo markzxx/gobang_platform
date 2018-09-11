@@ -294,7 +294,7 @@ function bindPlayClick(socket) {
     });
 
     $('.Go').click(function (e) {
-        socket.emit('go', [456, 789, rd(1,15), rd(1,15), rd(0,1)]);
+        socket.emit('test_go', [$('#sid').data('id'), rd(1,15), rd(1,15), rd(0,1)]);
     });
 }
 

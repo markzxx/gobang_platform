@@ -135,8 +135,8 @@ async def play(soid, data):
         find, idx = find_rank(data['sid'])
         if not find:
             await sio.emit('reply', "You have not uploaded code.", room=soid)
-        elif idx == 0:
-            await sio.emit('reply', "No opponent.", room=soid)
+        # elif idx == 0:
+        #     await sio.emit('reply', "No opponent.", room=soid)
         else:
             player1 = data['sid']
             player2 = rank_info[idx-1]['sid']
@@ -150,7 +150,7 @@ async def push_game(player, soid=None):
 async def add_game_log(white, black):
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute("insert into game_log(white_sid, black_sid, start_time, end_time, winner, loser) "
-                                  "values({}, {}, CURRENT_TIMESTAMP, 0, 0, 0)".format(white, black))
+                                  "values({}, {}, datetime({}, 'unixepoch', 'localtime'), 0, 0, 0)".format(white, black, int(time.time())))
         await db.commit()
         id = cursor.lastrowid
         await cursor.close()
@@ -159,15 +159,17 @@ async def add_game_log(white, black):
 async def update_game_log(game_id, winner, loser):
     print("update_game_log", game_id, winner, loser)
     async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute("update game_log set winner={}, loser={}, end_time={} where id={}".format(winner, loser, int(time.time()), game_id))
+        await db.execute("update game_log set winner={}, loser={}, end_time=datetime({}, 'unixepoch', 'localtime') where id={}".format(winner, loser, int(time.time()), game_id))
         await db.commit()
-        
+    print("update_game_log success")
+    
 async def update_chess_log(game_id):
     print("update_chess_log", games[game_id]['chess_log'])
     async with aiosqlite.connect(DB_NAME) as db:
-        await db.executemany("insert into chess_log values(%s,%s,%s,%s,%s)", games[game_id]['chess_log'])
+        await db.executemany("insert into chess_log values(?,?,?,?,datetime(?, 'unixepoch', 'localtime'))", games[game_id]['chess_log'])
         await db.commit()
-
+    print("update_chess_log success")
+    
 async def begin(white, black):
     game_id = await add_game_log(white, black)
     print("begin", white, black, game_id)
@@ -185,6 +187,7 @@ async def finish(soid, data):
     game_id = players[data[0]]
     await update_game_log(game_id, data[4], data[5])
     await update_chess_log(game_id)
+    await update_list()
     del games[game_id]
     del players[data[0]]
     del players[data[1]]
@@ -202,6 +205,13 @@ async def go(soid, data):
     await sio.emit('go', data[2:], room=data[0])
     await sio.emit('go', data[2:], room=data[1])
 
+@sio.on('test_go')
+async def go(soid, data):
+    print("test_go", data)
+    game_id = players[data[0]]
+    await sio.emit('go', data[1:], room=games[game_id]['white'])
+    await sio.emit('go', data[1:], room=games[game_id]['black'])
+
 async def update_list(sid=None, data=None):
     global rank_info
     rank_info = []
@@ -212,6 +222,7 @@ async def update_list(sid=None, data=None):
         for row in rows:
             rank_info.append(score(row))
     rank_info = sorted(rank_info, key=lambda x:(x['score'],x['rand']), reverse=True)
+    await sio.emit('update_list', rank_info)
 
 @sio.on('update_list')
 async def update_all_list(soid, data):

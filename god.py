@@ -182,7 +182,7 @@ if __name__ == '__main__':
     go_data[3] = god.last_pos[1]
     go_data[4] = color_map[-1]
     socketIO.emit("go", go_data)
-
+    socketIO.wait(seconds=1)
     #print(go_data)
 
     #see(god.chessboard)
@@ -193,6 +193,7 @@ if __name__ == '__main__':
         go_data[3] = god.last_pos[1]
         go_data[4] = color_map[1]
         socketIO.emit("go", go_data)
+        socketIO.wait(seconds=1)
         #print(go_data)
         #see(god.chessboard)
 
@@ -202,6 +203,7 @@ if __name__ == '__main__':
         go_data[3] = god.last_pos[1]
         go_data[4] = color_map[-1]
         socketIO.emit("go", go_data)
+        socketIO.wait(seconds=1)
         #print(go_data)
         #see(god.chessboard)
 
@@ -209,10 +211,12 @@ if __name__ == '__main__':
     if god.error:
         error_data = (begin_data[0], begin_data[1], god.error)
         socketIO.emit("error", error_data)
+        socketIO.wait(seconds=1)
         #print(error_data)
 
     finish_data = (begin_data[0], begin_data[1], god.start_time, god.end_time, god.color_user_map[god.winner], god.color_user_map[-god.winner])
     socketIO.emit("finish", finish_data)
+    socketIO.wait(seconds=1)
     #print(finish_data)
 
     #see(god.chessboard)
