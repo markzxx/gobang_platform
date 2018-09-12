@@ -181,7 +181,11 @@ async def play(soid, data):
         else:
             player2 = rank_info[idx-1]['sid']
         player1 = data['sid']
-        await begin(player1, player1, player2)
+        if random.random()>0.5:
+            await begin(player1, player1, player2)
+        else:
+            await begin(player1, player2, player1)
+        
         # await begin(player2, player1)
     
 async def begin(player1, white, black):
