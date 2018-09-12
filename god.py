@@ -7,12 +7,7 @@ import sys
 from socketIO_client import SocketIO, BaseNamespace
 
 class Namespace(BaseNamespace):
-    def on_connect(selpif):
-        print ('[Connected]')
-
-    def on_reply (selpif, data):
-        for d in data:
-            print(d)
+    pass
 
 def check_chess_board(chess_board, size):
     result = False
@@ -22,8 +17,8 @@ def check_chess_board(chess_board, size):
         result, winner = f(chess_board = chess_board, size = size)
 
         if result:
-            print(f)
-            print(winner)
+            # print(f)
+            # print(winner)
             break
     return (result, winner)
 
@@ -402,16 +397,15 @@ if __name__ == '__main__':
     black_path = file_dic+'/'+arg_list[3]+'.py'#'./11610999.py'
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
-    player = str(arg_list[6])
+    player = int(arg_list[6])
 
     god = God(white_path, black_path, size, time_interval)
 
-    begin_data = god.begin
-    begin_data[0] = player
+    begin_data = [player, 0]
     go_data = [begin_data[0], begin_data[1], -1, -1, 0]
 
 
-    print(go_data)
+    # print(go_data)
 
     tem_color = -1
     while not god.finish:
@@ -422,7 +416,7 @@ if __name__ == '__main__':
         go_data[3] = god.last_pos[1]
         go_data[4] = color_map[tem_color]
         socketIO.emit("go", deal_go_data(go_data))
-        print(go_data)
+        # print(go_data)
 
 
         tem_color = 1
@@ -432,26 +426,27 @@ if __name__ == '__main__':
         go_data[3] = god.last_pos[1]
         go_data[4] = color_map[tem_color]
         socketIO.emit("go", deal_go_data(go_data))
-        print(go_data)
+        # print(go_data)
 
 
     god.end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     if god.error:
         error_data = (begin_data[0], begin_data[1], god.error)
         socketIO.emit("error", error_data)
-        print(error_data)
+        # print(error_data)
     else:
         go_data[2] = god.last_pos[0]
         go_data[3] = god.last_pos[1]
         go_data[4] = color_map[tem_color]
-        print(go_data)
+        # print(go_data)
 
         socketIO.emit("go", deal_go_data(go_data))
 
     finish_data = (begin_data[0], begin_data[1], god.start_time, god.end_time, god.color_user_map[god.winner],
                    god.color_user_map[-god.winner])
     socketIO.emit("finish", finish_data)
-    print(finish_data)
+    socketIO.wait(seconds=1)
+    # print(finish_data)
 
 
 

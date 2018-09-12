@@ -190,7 +190,7 @@ async def begin(player1, white, black):
     players[player1] = game_id
     games[game_id] = {'white': white, 'black': black, "chess_log": []}
     await push_game(player1)
-    t = os.popen('python god.py code {} {} {} {} {}'.format(white, black, 15, 1, player1))
+    os.popen('python god.py code {} {} {} {} {}'.format(white, black, 15, 1, player1))
 
 @sio.on('go')
 async def go(soid, data):
