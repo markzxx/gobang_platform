@@ -14,11 +14,17 @@
     <h2 class="title">Login</h2>
     <div class="main-body">
         <form action="login" method="post" accept-charset="utf-8" onsubmit="return jsMd5();" enctype="multipart/form-data">
-            <span>Student Id</span>
-            <input id="sid" title="sid" name="sid" type="text" value=""/>
-            <span>Password</span>
-            <input id="pwd" title="pwd" name="pwd" type="password" value=""/>
-            <input type="submit" value="submit"/>
+            <table >
+            <tr>
+            <td>Student Id</td>
+            <td><input id="sid" title="sid" name="sid" type="text" value=""/></td>
+            </tr>
+            <tr>
+            <td>Password</td>
+            <td><input id="pwd" title="pwd" name="pwd" type="password" value=""/></td>
+            </tr>
+            </table>
+            <p><input type="submit" value="submit"/></p>
         </form>
         <br><span>Your first login is a registration.</span>
     </div>

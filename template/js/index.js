@@ -10,14 +10,15 @@ var COMPETITOR_NAME = '';    // 对手的昵称
 // 设置canvas的content的
 var ctx = null;
 
-var socket = io('http://10.20.13.19:8080');
+var socket = io('http://10.20.96.148:8080');
 // 棋盘坐标数组
 var arrPieces = new Array();
+var chess_log = null;
 
 $(document).ready(function () {
     clientSocket(socket);
     socket.emit('update_list', "update");
-    bindPlayClick(socket);
+    bindButtonClick(socket);
     drawChessBoard();
 });
 
@@ -77,22 +78,29 @@ function clientSocket(socket) {
 
     socket.on('push_game', function (gameInfo) {
         drawChessBoard();
+        chess_log = new Array();
         $.each(gameInfo.chess_log, function (index, value) {
             drawNewPiece(value[1], value[2], value[3]);
+            chess_log.push(value);
         });
         var status = 'Player White：' + gameInfo.white +'\t\t\tBlack：' + gameInfo.black;
         $('#player-status').text(status);
         setGameStatus('Game Begin');
+        $('.range').attr("disabled", "disabled");
     });
 
     socket.on('go', function (info) {
         console.log(info);
         drawNewPiece(info[0], info[1], info[2]);
+        chess_log.push(info);
     });
 
     socket.on('finish', function (winner) {
         $('.play').text("Play");
         $('.play').removeAttr("disabled");
+        $('.range').removeAttr("disabled");
+        $('#range').attr('max', chess_log.length);
+        $('#range').val(chess_log.length);
         if(winner==0)
             setGameStatus('Game draw!');
         else
@@ -109,9 +117,9 @@ function rd(n,m){
     return Math.floor(Math.random() * c + n);
 }
 
-// 绑定上分事件
-function bindPlayClick(socket) {
-    $('.play').click(function (e) {
+// 绑定各种按键
+function bindButtonClick(socket) {
+    $('.play').click(function () {
         var $this = $(this);
         var status = $this.text();
 
@@ -121,6 +129,30 @@ function bindPlayClick(socket) {
   
         watch($this.data('id'));
         socket.emit('play', {'sid':$this.data('id'), 'action':$this.attr("data-name")});
+    });
+
+    $('#left').click(function () {
+        $('#range').val($('#range').val()-1).change();
+    });
+
+    $('#right').click(function () {
+        $('#range').val($('#range').val()*1+1).change();
+        
+    });
+
+    $('#range').change(function () {
+    drawChessBoard();
+    for(var i=0; i<$('#range').val(); i++)
+        drawNewPiece(chess_log[i][0], chess_log[i][1], chess_log[i][2]);
+    });
+
+    $('#download').click(function () {
+        var aTag = document.createElement('a');
+        var blob = new Blob([chess_log.join('\n')]);
+        aTag.download = "chess_log.txt";
+        aTag.href = URL.createObjectURL(blob);
+        aTag.click();
+        URL.revokeObjectURL(blob);
     });
 /*
     $('.Go').click(function (e) {
