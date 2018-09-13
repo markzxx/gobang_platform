@@ -167,7 +167,7 @@ if __name__ == '__main__':
     black_path = file_dic+'/'+arg_list[3]+'.py'#'./11610999.py'
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
-    player = str(arg_list[6])
+    player = int(arg_list[6])
 
     god = God(white_path, black_path, size, time_interval)
 
