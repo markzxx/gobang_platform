@@ -93,7 +93,7 @@ app.router.add_static('/static', 'template')
 app.add_routes([web.get('/', handler.index, name='index'),
                 web.get('/login', handler.login, name='login'),
                 web.post('/login', handler.login, name='login'),
-                web.get('/logout', handler.login, name='logout'),
+                web.get('/logout', handler.logout, name='logout'),
                 web.post('/upload', handler.upload, name='upload')])
 fernet_key = fernet.Fernet.generate_key()
 secret_key = base64.urlsafe_b64decode(fernet_key)

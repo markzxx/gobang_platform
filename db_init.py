@@ -20,9 +20,9 @@ async def init_db():
             "(sid int primary key, password varchar(32) NOT NULL, submit_time time, last_update time, update_times int default 0)"
         )
         
-        test_users = [(123, "123"), (456, "456"), (789, "789")]
+        test_users = ['123', "456", "789", '111', '2', '222', '333', '888', '999', '12345', '11210162', '11610330', '11612110']
         for user in test_users:
-            await db.execute("insert into users values ({}, '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)".format(user[0], str(hashlib.md5(user[1].encode()).hexdigest())))
+            await db.execute("insert into users values ({}, '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)".format(user, str(hashlib.md5('123'.encode()).hexdigest())))
         await db.commit()
         
         await db.execute(
