@@ -36,9 +36,11 @@ class Http_handler:
             return aiohttp_jinja2.render_template('login.html', request, {})
             
         data = await request.post()
+        if not data['sid'].isdigit():
+            raise self.redirect(request.app.router, 'login')
         session = await get_session(request)
         async with aiosqlite.connect(DB_NAME) as db:
-            cursor = await db.execute('SELECT * FROM users where sid={}'.format(data['sid']))
+            cursor = await db.execute('SELECT * FROM users where sid={}'.format(int(data['sid'])))
             row = await cursor.fetchone()
             await cursor.close()
             if row and row[1] != data['pwd']:
