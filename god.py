@@ -1,6 +1,6 @@
 import imp
 import numpy as np
-#from timeout_decorator import timeout
+from timeout_decorator import timeout
 import time
 import sys
 
@@ -110,13 +110,13 @@ class God(object):
 
         if color ==1:
             try:
-                self.white.go(self.chessboard)#timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
+                timeout(self.time_out)(self.white.go)(self.chessboard)#timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.white.candidate_list
         else:
             try:
-                self.black.go(self.chessboard)#timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
+                timeout(self.time_out)(self.black.go)(self.chessboard)#timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.black.candidate_list
