@@ -111,14 +111,12 @@ def score(row):
     return {'score':score_info, 'rand':random.random(), 'sid':sid}
 
 def find_rank(sid):
-    idx = 0
-    find = False
+    idx = -1
     for i, info in enumerate(rank_info):
         if sid == info['sid']:
             idx = i
-            find = True
             break
-    return find, idx
+    return idx
 
 async def add_game_log (white, black):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -168,8 +166,8 @@ async def play(soid, data):
     if data['sid'] in players:
         await sio.emit('reply', "You are in an unfinished game", soid)
     else:
-        find, idx = find_rank(data['sid'])
-        if not find:
+        idx = find_rank(data['sid'])
+        if idx == -1:
             await sio.emit('reply', "You have not uploaded user_code.", room=soid)
             return
         elif idx == 0:
@@ -181,7 +179,6 @@ async def play(soid, data):
             await begin(player1, player1, player2)
         else:
             await begin(player1, player2, player1)
-        
         # await begin(player2, player1)
     
 async def begin(player1, white, black):
