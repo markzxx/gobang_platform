@@ -14,13 +14,6 @@ class AI(object):
         if color == -1:
             self.chessboard[self.chessboard_size//2,self.chessboard_size//2] = -1
 
-    def first_chess(self):
-        assert self.color ==-1
-        self.candidate_list.clear()
-        self.candidate_list.append((self.chessboard_size//2,self.chessboard_size//2))
-        self.chessboard[self.candidate_list[-1][0], self.candidate_list[-1][0]] = self.color
-
-
     def go(self, chessboard):
         self.candidate_list.clear()
         self.chessboard = chessboard
