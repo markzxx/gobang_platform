@@ -8,6 +8,7 @@ class Namespace(BaseNamespace):
         for d in data:
             print(d)
 
-socketIO = SocketIO('localhost', 8080, Namespace)
-socketIO.emit("go", "finally")
+socketIO = SocketIO('10.20.96.148', 8080, Namespace)
+for sid in [123,456,888,111]:
+    socketIO.emit("play", {'sid':sid})
 socketIO.wait(seconds=1)

@@ -43,9 +43,9 @@ class Http_handler:
             await cursor.close()
             if row and row[1] != data['pwd']:
                 raise self.redirect(request.app.router, 'login')
-            elif not row:
-                await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
-                await db.commit()
+            # elif not row:
+            #     await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
+            #     await db.commit()
         session['sid'] = data['sid']
         raise self.redirect(request.app.router, 'index')
         
@@ -54,11 +54,11 @@ class Http_handler:
         sid = session['sid']
         reader = await request.multipart()
         field = await reader.next()
-        assert field.name == 'code'
+        assert field.name == 'user_code'
         size = 0
-        if not os.path.exists("code/"):
-            os.mkdir("code/")
-        with open(os.path.join('code/{}.py'.format(sid)), 'wb') as f:
+        if not os.path.exists("user_code/"):
+            os.mkdir("user_code/")
+        with open(os.path.join('user_code/{}.py'.format(sid)), 'wb') as f:
             while True:
                 chunk = await field.read_chunk()
                 if not chunk:
@@ -99,8 +99,6 @@ fernet_key = fernet.Fernet.generate_key()
 secret_key = base64.urlsafe_b64decode(fernet_key)
 setup(app, EncryptedCookieStorage(secret_key))
 
-watchDict = {}
-watchingDic = {}
 rank_info = []
 games = {}
 players = {}
@@ -108,8 +106,6 @@ players = {}
 def score(row):
     sid = row[0]
     score_info = row[1]*10-row[2]*10
-    # if score_info < 0:
-    #     score_info = 0
     return {'score':score_info, 'rand':random.random(), 'sid':sid}
 
 def find_rank(sid):
@@ -160,7 +156,6 @@ async def push_game(player, soid=None):
 @sio.on('watch')
 async def message(soid, data):
     data = int(data)
-    print('watch', data)
     if len(sio.rooms(soid)) > 1:
         sio.leave_room(soid, sio.rooms(soid)[1])
     sio.enter_room(soid, data)
@@ -168,20 +163,23 @@ async def message(soid, data):
 
 @sio.on('play')
 async def play(soid, data):
-    print(data)
     if data['sid'] in players:
         await sio.emit('reply', "You are in an unfinished game", soid)
     else:
         find, idx = find_rank(data['sid'])
         if not find:
-            await sio.emit('reply', "You have not uploaded code.", room=soid)
+            await sio.emit('reply', "You have not uploaded user_code.", room=soid)
             return
         elif idx == 0:
             player2 = data['sid']
         else:
             player2 = rank_info[idx-1]['sid']
         player1 = data['sid']
-        await begin(player1, player1, player2)
+        if random.random()>0.5:
+            await begin(player1, player1, player2)
+        else:
+            await begin(player1, player2, player1)
+        
         # await begin(player2, player1)
     
 async def begin(player1, white, black):
@@ -190,7 +188,7 @@ async def begin(player1, white, black):
     players[player1] = game_id
     games[game_id] = {'white': white, 'black': black, "chess_log": []}
     await push_game(player1)
-    t = os.popen('python god.py code {} {} {} {} {}'.format(white, black, 15, 1, player1))
+    os.popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player1))
 
 @sio.on('go')
 async def go(soid, data):
@@ -234,7 +232,6 @@ async def update_all_list(sid=None, data=None):
 
 @sio.on('update_list')
 async def update_one_list(soid, data):
-    print(rank_info)
     await sio.emit('update_list', rank_info, room=soid)
     
 @sio.on('disconnect')

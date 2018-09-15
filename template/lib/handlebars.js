@@ -175,7 +175,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var base = _interopRequireWildcard(_handlebarsBase);
 
 	// Each of these augment the Handlebars object. No need to setup here.
-	// (This is done to easily share code between commonjs and browse envs)
+	// (This is done to easily share user_code between commonjs and browse envs)
 
 	var _handlebarsSafeString = __webpack_require__(21);
 
@@ -2645,7 +2645,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return;
 	    }
 
-	    /* istanbul ignore next: Sanity code */
+	    /* istanbul ignore next: Sanity user_code */
 	    if (!this[object.type]) {
 	      throw new _exception2['default']('Unknown type: ' + object.type, object);
 	    }
@@ -3071,7 +3071,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 
 	  accept: function accept(node) {
-	    /* istanbul ignore next: Sanity code */
+	    /* istanbul ignore next: Sanity user_code */
 	    if (!this[node.type]) {
 	      throw new _exception2['default']('Unknown type: ' + node.type, node);
 	    }
@@ -3593,7 +3593,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    } else if (explicit) {
 	      // This is a case where the buffer operation occurs as a child of another
 	      // construct, generally braces. We have to explicitly output these buffer
-	      // operations to ensure that the emitted code goes in the correct location.
+	      // operations to ensure that the emitted user_code goes in the correct location.
 	      return ['buffer += ', source, ';'];
 	    } else {
 	      source.appendToBuffer = true;
@@ -4204,7 +4204,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // is provided, but we don't know at compile-time whether it
 	  // is a helper or a path.
 	  //
-	  // This operation emits more code than the other options,
+	  // This operation emits more user_code than the other options,
 	  // and can be avoided by passing the `knownHelpers` and
 	  // `knownHelpersOnly` flags at compile-time.
 	  invokeAmbiguous: function invokeAmbiguous(name, helperCall) {

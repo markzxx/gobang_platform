@@ -1,6 +1,6 @@
 import imp
 import numpy as np
-from timeout_decorator import timeout
+#from timeout_decorator import timeout
 import time
 import sys
 
@@ -13,6 +13,7 @@ class Namespace(BaseNamespace):
     def on_reply (selpif, data):
         for d in data:
             print(d)
+
 def check_chess_board(chess_board, size):
     result = False
     winner = 0
@@ -21,209 +22,55 @@ def check_chess_board(chess_board, size):
         result, winner = f(chess_board = chess_board, size = size)
 
         if result:
-            #print(f)
-            #print(winner)
+            print(f)
+            print(winner)
             break
     return (result, winner)
 
-def check_chess_board_by_line(chess_board, size):
-    result = False
-    count = 0
-    last_color = 0
+def check_chess_board2(chessboard,chessboard_size,pos,color):
     winner = 0
-    for x in range(size):
-        for y in range(size):
-            assert count<5
-            assert result==False
-            assert winner==0
-            if y==0:
-                last_color = chess_board[x,y]
-                count=1
-            else:
-                if last_color!=0 and last_color == chess_board[x,y]:
-                    count+=1
-                else:
-                    count = 0
-                    last_color = chess_board[x,y]
-            if count==5:
-                result = True
-                winner = last_color
-                break
-        if result:
-            assert count == 5
-            assert winner==last_color
-            break
-    return (result, winner)
+    def get_chess(chess_pos_list, size):
+        pos_list = []
+        for chess_pos in chess_pos_list:
+            # print("pre",chess_pos)
+            if chess_pos[0] >= 0 and chess_pos[0] < size and chess_pos[1] >= 0 and chess_pos[1] < size:
+                pos_list.append(chess_pos)
+        return pos_list
 
-def check_chess_board_by_column(chess_board, size):
     result = False
-    count = 0
-    last_color = 0
-    winner = 0
-    for y in range(size):
-        for x in range(size):
-            assert count<5
-            assert result==False
-            assert winner == 0
-            if x==0:
-                last_color = chess_board[x,y]
-                count=1
-            else:
-                if last_color!=0 and last_color == chess_board[x,y]:
-                    count+=1
-                else:
-                    count = 0
-                    last_color = chess_board[x,y]
-            if count==5:
-                result = True
-                winner = last_color
-                break
-        if result:
-            assert count == 5
-            assert winner == last_color
-            break
-        else:
+    if len(np.where(chessboard == 0)[0]) == 0:
+        result = True
+        winner = 0
+    else:
+        x, y = pos
+        axis1 = get_chess([(x + i, y + i) for i in range(-4, 5)], chessboard_size)
+        axis2 = get_chess([(x - i, y + i) for i in range(-4, 5)], chessboard_size)
+        axis3 = get_chess([(x + i, y) for i in range(-4, 5)], chessboard_size)
+        axis4 = get_chess([(x, y + i) for i in range(-4, 5)], chessboard_size)
+        all_axis = [axis1, axis2, axis3, axis4]
+        all_pos_list = axis1 + axis2 + axis3 + axis4
+        # print(all_axis)
+        canvas = np.ones_like(chessboard, dtype=np.uint8)
+        canvas = canvas * 125
+
+        for axis in all_axis:
+
             count = 0
-    return (result, winner)
+            for chess_pos in axis:
 
-def check_chess_board_by_right_diagonal(chess_board, size):
-    assert size>=5
-    result = False
-    count = 0
-    last_color = 0
-    winner = 0
-    pos_list1 = [(0,i) for i in range(0,size-4)]
-    pos_list2 = [(i,0) for i in range(1, size-4)]
-    for pos in pos_list1:
-        tem_x, tem_y = pos
-        tem_limit = size - 1 - tem_y
-        assert count < 5
-        assert result == False
-        assert winner ==0
-        for i in range(0, tem_limit + 1):
-            x = tem_x + i
-            y = tem_y + i
-
-            if last_color == 0:
-                last_color = chess_board[x, y]
-                count = 1
-            else:
-                if last_color!=0 and last_color == chess_board[x, y]:
+                if chessboard[chess_pos[0], chess_pos[1]] == color:
                     count += 1
                 else:
                     count = 0
-                    last_color = chess_board[x, y]
-            if count == 5:
-                result = True
-                winner = last_color
+                if count == 5:
+                    result = True
+                    #print(count, result)
+                    break
+
+            if result:
+                winner = color
                 break
-        if result:
-            assert count == 5
-            break
-        else:
-            count = 0
-    if result:
-        return (result, winner)
-    for pos in pos_list2:
-        tem_x, tem_y = pos
-        tem_limit = size - 1 - tem_x
-        assert count < 5
-        assert result == False
-        assert winner == 0
-        for i in range(0, tem_limit + 1):
-            x = tem_x + i
-            y = tem_y + i
-
-            if last_color == 0:
-                last_color = chess_board[x, y]
-                count = 1
-            else:
-                if last_color!=0 and last_color == chess_board[x, y]:
-                    count += 1
-                else:
-                    count = 0
-                    last_color = chess_board[x, y]
-            if count == 5:
-                result = True
-                break
-        if result:
-            assert count == 5
-            break
-        else:
-            count = 0
-
-    return (result, winner)
-
-
-def check_chess_board_by_left_diagonal(chess_board, size):
-    assert size >= 5
-    result = False
-    count = 0
-    last_color = 0
-    winner = 0
-    pos_list1 = [(0, i) for i in range( 4, size)]
-    pos_list2 = [(i, size-1) for i in range(1, size - 4)]
-    for pos in pos_list1:
-        tem_x, tem_y = pos
-        tem_limit = tem_y
-        assert count < 5
-        assert result == False
-        assert winner == 0
-        for i in range(0, tem_limit + 1):
-            x = tem_x + i
-            y = tem_y - i
-
-            if last_color == 0:
-                last_color = chess_board[x, y]
-                count = 1
-            else:
-                if last_color!=0 and last_color == chess_board[x, y]:
-                    count += 1
-                else:
-                    count = 0
-                    last_color = chess_board[x, y]
-            if count == 5:
-                result = True
-                winner = last_color
-                break
-        if result:
-            assert count == 5
-            assert winner == last_color
-            break
-        else:
-            count = 0
-    if result:
-        return (result, winner)
-    for pos in pos_list2:
-        tem_x, tem_y = pos
-        tem_limit = size - 1 - tem_x
-        assert count < 5
-        assert result == False
-        assert winner == 0
-        for i in range(0, tem_limit + 1):
-            x = tem_x + i
-            y = tem_y - i
-
-            if last_color == 0:
-                last_color = chess_board[x, y]
-                count = 1
-            else:
-                if last_color!=0 and last_color == chess_board[x, y]:
-                    count += 1
-                else:
-                    count = 0
-                    last_color = chess_board[x, y]
-            if count == 5:
-                result = True
-                winner = last_color
-                break
-        if result:
-            assert count == 5
-            assert winner==last_color
-            break
-        else:
-            count = 0
-    return (result, winner)
+    return result, winner
 
 class God(object):
     def __init__(self, white_path, black_path, chessboard_size, time_out):
@@ -256,43 +103,20 @@ class God(object):
             return True
 
 
-
-
-    def first_chess(self):
-
-        try:
-            self.black.first_chess() #--------------------------------------------------------
-        except Exception:
-            pass
-
-        if len(self.black.candidate_list)>0:
-            pos = self.black.candidate_list[-1]
-            self.finish = self.check_chess(pos,color=-1)
-
-            if not self.finish:
-                self.last_pos = pos
-                self.chessboard[pos[0], pos[1]] = -1
-                self.finish = self.judge(pos, -1)
-            else:
-                self.winner = 1
-        else:
-            self.error = self.error + "Dear " + str(self.color_user_map[-1]) + ' : your candidate list of chess is empty.\n'
-            self.fail_step(color=-1)
-
-
     def update(self, color):
+        assert self.chessboard.all()<2 and self.chessboard.all()>-2
         pos = (-1,-1)
         tem_list = []
 
         if color ==1:
             try:
-                self.white.go(self.chessboard)#--------------------------------------------------------
+                self.white.go(self.chessboard)#timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.white.candidate_list
         else:
             try:
-                self.black.go(self.chessboard)#--------------------------------------------------------
+                self.black.go(self.chessboard)#timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
             except Exception:
                 pass
             tem_list = self.black.candidate_list
@@ -318,7 +142,7 @@ class God(object):
             result = True
             self.winner = 0
         else:
-            result, winner = check_chess_board(self.chessboard, self.chessboard_size)
+            result, winner = check_chess_board2(self.chessboard, self.chessboard_size, pos, color)
             self.finish = result
             self.winner = winner
         return result
@@ -343,16 +167,16 @@ if __name__ == '__main__':
     black_path = file_dic+'/'+arg_list[3]+'.py'#'./11610999.py'
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
-    player1 = int(arg_list[6])
-
+    player = int(arg_list[6])
 
     god = God(white_path, black_path, size, time_interval)
 
-    begin_data = [player1, int(arg_list[3])]
+    #begin_data = god.begin
+    begin_data = (player,0)
     go_data = [begin_data[0], begin_data[1], -1, -1, 0]
 
 
-    # print(go_data)
+    #print(go_data)
 
     tem_color = -1
     while not god.finish:
@@ -363,7 +187,7 @@ if __name__ == '__main__':
         go_data[3] = god.last_pos[1]
         go_data[4] = color_map[tem_color]
         socketIO.emit("go", deal_go_data(go_data))
-        # print(go_data)
+        #print(go_data)
 
 
         tem_color = 1
@@ -373,27 +197,28 @@ if __name__ == '__main__':
         go_data[3] = god.last_pos[1]
         go_data[4] = color_map[tem_color]
         socketIO.emit("go", deal_go_data(go_data))
-        # print(go_data)
+        #print(go_data)
 
 
     god.end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     if god.error:
         error_data = (begin_data[0], begin_data[1], god.error)
         socketIO.emit("error", error_data)
-        # print(error_data)
+        #print(error_data)
     else:
         go_data[2] = god.last_pos[0]
         go_data[3] = god.last_pos[1]
         go_data[4] = color_map[tem_color]
-        # print(go_data)
+        #print(go_data)
 
         socketIO.emit("go", deal_go_data(go_data))
 
     finish_data = (begin_data[0], begin_data[1], god.start_time, god.end_time, god.color_user_map[god.winner],
                    god.color_user_map[-god.winner])
     socketIO.emit("finish", finish_data)
-    socketIO.wait(seconds=1)
-    # print(finish_data)
+    #print(finish_data)
+
+    time.sleep(1)
 
 
 

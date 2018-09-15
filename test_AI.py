@@ -2,7 +2,7 @@ import numpy as np
 import random
 import time
 
-
+import queue
 
 class AI(object):
     def __init__(self, chessboard_size, color, time_out):
@@ -22,7 +22,6 @@ class AI(object):
 
 
     def go(self, pos):
-
         self.candidate_list.clear()
         self.chessboard[pos[0], pos[1]] = -self.color
         idx = np.where(self.chessboard == 0)
