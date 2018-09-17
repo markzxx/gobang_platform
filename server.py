@@ -56,7 +56,7 @@ class Http_handler:
         sid = session['sid']
         reader = await request.multipart()
         field = await reader.next()
-        assert field.name == 'user_code'
+        assert field.name == 'code'
         size = 0
         if not os.path.exists("user_code/"):
             os.mkdir("user_code/")
