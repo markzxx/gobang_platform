@@ -96,7 +96,7 @@ function clientSocket(socket) {
       drawNewPiece(value[1], value[2], value[3]);
       chess_log.push(value);
     });
-    var status = 'White：' + gameInfo.white + '\t\t\tBlack：' + gameInfo.black;
+    var status = 'White：' + gameInfo.white + '\t\t\t , Black：' + gameInfo.black;
     $('#player-status').text(status);
     setGameStatus('Game Begin');
     $('.range').attr("disabled", "disabled");
@@ -257,64 +257,104 @@ function change_page(id) {
   });
   $('#' + $('#watch_id').data('id')).addClass('gaming-status');
 }
-// 加载在线用户列表
+// // 加载在线用户列表
+// function handlebarsUserList(userList) {
+//   console.log(userList);
+//   // let str_text='[';
+//   // for (var i = 0; i < userList.length; i++) {
+//   //   str_text+=JSON.stringify(userList[i])+",";
+//   // }
+//   // str_text=str_text.substring(0,str_text.length-1);
+//   // str_text+="]";
+//   // console.log(str_text);
+//   var now_sid = parseInt($("#sid").attr("data-id"));
+//   var user_rank_html = '<tr class="warning"><th colspan=4 style="text-align:center;cursor:move">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
+//   let state = "active";
+//   //pages分页
+//   Page.items_num = userList.length;
+//   Page.page_num = Math.ceil(Page.items_num / Page.each_num);
+//   Page.items = [];
+//   Page.now_page = 0; //Where are you,default 0.
+//   Page.page_html = "";
+//   let value;
+//   for (var i = 0; i < Page.page_num; i++) {
+//     for (var index = i * Page.each_num; index < (((i + 1) * Page.each_num) > Page.items_num ? Page.items_num : (i + 1) * Page.each_num); index++) {
+//       value = userList[index];
+//       // if(index%2==0)state="active";
+//       // if(index%2!=0)state="";
+//       if (parseInt(value.sid) == parseInt(now_sid)) {
+//         "success";
+//         Page.now_page = i;
+//       }
+//       Page.items.push('<tr class="' + state + '"><td>' + (index + 1) + '</td><td><p class="user-id">' + value.sid + '</p></td>' + '<td><p class="user-score">' + value.score + '</p></td>' + '<td><button class="label user-status" id="' + value.sid + '" >watch</button></td></tr>')
+//     }
+//   }
+//
+//   let page_active = "";
+//   for (var i = 0; i < Page.page_num; i++) {
+//     if (i == Page.now_page) {
+//       page_active = "page_active";
+//     } else {
+//       page_active = "";
+//     }
+//     Page.page_html += "<button class='btn btn-default btn-sm " + page_active + "' onclick='change_page(" + i + ")'>" + (parseInt(i) + 1) + "</button>";
+//   }
+//
+//   //Default : show page which in you are.log((((i+1)*Page.each_num)>Page.items_num?Page.items_num:(i+1)*Page.each_num))
+//   for (var index = Page.now_page * Page.each_num; index < (((Page.now_page + 1) * Page.each_num) > Page.items_num ? Page.items_num : (Page.now_page + 1) * Page.each_num); index++) {
+//     user_rank_html += Page.items[index];
+//   }
+//   user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'><td colspan='4'>" +
+//     // "<button class='btn btn-info btn-sm' id='page-left'><i class='glyphicon glyphicon-arrow-left'></i></button>"+
+//     Page.page_html +
+//     // "<button class='btn btn-info btn-sm' id='page-right'><i class='glyphicon glyphicon-arrow-right'></i></button>"+
+//     "</td></tr>";
+//   $('#rank_table').html(user_rank_html);
+//   $('.user-status').click(function(e) {
+//     watch($(this).attr('id'));
+//   });
+//   $('#' + $('#watch_id').data('id')).addClass('gaming-status');
+//
+// }
+// 加载在线用户列表(无分页)
 function handlebarsUserList(userList) {
   console.log(userList);
-  // let str_text='[';
-  // for (var i = 0; i < userList.length; i++) {
-  //   str_text+=JSON.stringify(userList[i])+",";
-  // }
-  // str_text=str_text.substring(0,str_text.length-1);
-  // str_text+="]";
-  // console.log(str_text);
   var now_sid = parseInt($("#sid").attr("data-id"));
+  let now_rank=11;
+  let now_score=0;
   var user_rank_html = '<tr class="warning"><th colspan=4 style="text-align:center;cursor:move">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
   let state = "active";
-  //pages分页
-  Page.items_num = userList.length;
-  Page.page_num = Math.ceil(Page.items_num / Page.each_num);
-  Page.items = [];
-  Page.now_page = 0; //Where are you,default 0.
-  Page.page_html = "";
+
   let value;
-  for (var i = 0; i < Page.page_num; i++) {
-    for (var index = i * Page.each_num; index < (((i + 1) * Page.each_num) > Page.items_num ? Page.items_num : (i + 1) * Page.each_num); index++) {
-      value = userList[index];
-      // if(index%2==0)state="active";
-      // if(index%2!=0)state="";
-      if (parseInt(value.sid) == parseInt(now_sid)) {
-        "success";
-        Page.now_page = i;
+  for (var index = 0; index < userList.length; index++) {
+    value=userList[index];
+    if(index<10){
+      if(now_sid==value.sid){
+        state="info";
+        now_rank=index+1;
+        now_score=value.score;
       }
-      Page.items.push('<tr class="' + state + '"><td>' + (index + 1) + '</td><td><p class="user-id">' + value.sid + '</p></td>' + '<td><p class="user-score">' + value.score + '</p></td>' + '<td><button class="label user-status" id="' + value.sid + '" >watch</button></td></tr>')
+      user_rank_html+='<tr class="' + state + ' rank-'+(index+1)+'"><td><p class="user-rank">' + (index + 1) + '</p></td><td><p class="user-id">' + value.sid + '</p></td>' + '<td><p class="user-score">' + value.score + '</p></td>' + '<td><button class="label user-status" id="' + value.sid + '" >watch</button></td></tr>';
+      state="active";
+    }else{
+        if(now_sid==value.sid){
+          now_rank=index+1;
+          now_score=value.score;
+          break;
+        }
     }
   }
-
-  let page_active = "";
-  for (var i = 0; i < Page.page_num; i++) {
-    if (i == Page.now_page) {
-      page_active = "page_active";
-    } else {
-      page_active = "";
-    }
-    Page.page_html += "<button class='btn btn-default btn-sm " + page_active + "' onclick='change_page(" + i + ")'>" + (parseInt(i) + 1) + "</button>";
+  if(parseInt(now_rank)>10){
+    user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'>" +
+    '<tr class="info"><td>' + (now_rank) + '</td><td><p class="user-id">' + now_sid+ '</p></td>' + '<td><p class="user-score">' +now_score + '</p></td><td>Yourself</td>' + '</tr>'+
+      "</tr>";
   }
 
-  //Default : show page which in you are.log((((i+1)*Page.each_num)>Page.items_num?Page.items_num:(i+1)*Page.each_num))
-  for (var index = Page.now_page * Page.each_num; index < (((Page.now_page + 1) * Page.each_num) > Page.items_num ? Page.items_num : (Page.now_page + 1) * Page.each_num); index++) {
-    user_rank_html += Page.items[index];
-  }
-  user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'><td colspan='4'>" +
-    // "<button class='btn btn-info btn-sm' id='page-left'><i class='glyphicon glyphicon-arrow-left'></i></button>"+
-    Page.page_html +
-    // "<button class='btn btn-info btn-sm' id='page-right'><i class='glyphicon glyphicon-arrow-right'></i></button>"+
-    "</td></tr>";
   $('#rank_table').html(user_rank_html);
   $('.user-status').click(function(e) {
     watch($(this).attr('id'));
   });
   $('#' + $('#watch_id').data('id')).addClass('gaming-status');
-
 }
 
 // 设置游戏状态
@@ -323,7 +363,8 @@ function setGameStatus(status) {
 }
 
 //设置ranklist可拖动
-var Dragging = function(validateHandler) { //参数为验证点击区域是否为可移动区域，如果是返回欲移动元素，负责返回null
+var Dragging = function(validateHandler) {
+  //参数为验证点击区域是否为可移动区域，如果是返回欲移动元素，负责返回null
   var draggingObj = null; //dragging Dialog
   var diffX = 0;
   var diffY = 0;
@@ -337,15 +378,36 @@ var Dragging = function(validateHandler) { //参数为验证点击区域是否�
           diffY = e.clientY - draggingObj.offsetTop;
         }
         break;
-
       case 'mousemove':
         if (draggingObj) {
           draggingObj.style.left = (e.clientX - diffX) + 'px';
           draggingObj.style.top = (e.clientY - diffY) + 'px';
         }
         break;
-
       case 'mouseup':
+        draggingObj = null;
+        diffX = 0;
+        diffY = 0;
+        break;
+      case "touchstart":
+        draggingObj = validateHandler(e); //验证是否为可点击移动区域
+
+        if (draggingObj != null) {
+          // console.dir(e);
+          // console.log(e["touches"][0]["clientX"],e["touches"][0]["clientY"]);
+          // console.log(draggingObj.offsetLeft,draggingObj.offsetTop);
+          diffX = e["touches"][0]["clientX"] - draggingObj.offsetLeft;
+          diffY = e["touches"][0]["clientY"] - draggingObj.offsetTop;
+        }
+
+        break;
+      case 'touchmove':
+        if (draggingObj) {
+          draggingObj.style.left = (e["touches"][0]["clientX"] - diffX) + 'px';
+          draggingObj.style.top = (e["touches"][0]["clientY"] - diffY) + 'px';
+        }
+        break;
+      case 'touchend':
         draggingObj = null;
         diffX = 0;
         diffY = 0;
@@ -358,11 +420,17 @@ var Dragging = function(validateHandler) { //参数为验证点击区域是否�
       document.addEventListener('mousedown', mouseHandler);
       document.addEventListener('mousemove', mouseHandler);
       document.addEventListener('mouseup', mouseHandler);
+      document.addEventListener('touchmove', mouseHandler);
+      document.addEventListener('touchstart', mouseHandler);
+      document.addEventListener('touchend', mouseHandler);
     },
     disable: function() {
       document.removeEventListener('mousedown', mouseHandler);
       document.removeEventListener('mousemove', mouseHandler);
       document.removeEventListener('mouseup', mouseHandler);
+      document.removeEventListener('touchmove', mouseHandler);
+      document.removeEventListener('touchstart', mouseHandler);
+      document.removeEventListener('touchend', mouseHandler);
     }
   }
 }

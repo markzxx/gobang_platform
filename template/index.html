@@ -99,11 +99,11 @@
               <li><a href="#rank" class="scroll">排名</a></li>
               <li><a href="#contact" class="scroll">反馈</a></li> -->
             </ul>
-            <div style="position:absolute;right:0px;width:20%;height:100%;">
+            <div style="position:absolute;right:0px;width:auto;height:100%;">
               <form action="logout" method="get" accept-charset="utf-8" enctype="multipart/form-data">
                 <ul class="nav navbar-nav navbar-right link-effect">
                   <li><a href="javascript:void(0);" style="cursor:default;" id="sid" data-id="{{sid}}">Hello,{{sid}}</a></li>
-                  <li><a href="javascript:$('#logout').trigger('click');" style="color:#1ABC9C">Logout</a></li>
+                  <li><a href="javascript:$('#logout').trigger('click');" style="color:#1ABC9C;text-shadow:0px 0px 4px #2ea48d;font-weight:bold;">Logout</a></li>
                 </ul>
                 <button style="display:none" id="logout" name="logout" type="submit"></button>
               </form>
@@ -113,7 +113,7 @@
         </nav>
       </div>
       <div class="banner-info">
-        <h1 class="wow fadeInRight animated" data-wow-delay=".5s">Renju</h1>
+        <h1 class="wow fadeInRight animated" data-wow-delay=".5s">Gomoku</h1>
         <p class="wow fadeInRight animated" data-wow-delay=".5s">Welcome to AI VS Platform. In this platform,you can Upload your code and start a game with appropriate opponents.</p>
         <div class="upload_code">
           <button class="btn btn-primary" type="button" onclick="$('#code').trigger('click');" id="trigger_code" name="trigger_code" style="background-color:#1ABC9C;"><i class="glyphicon glyphicon-upload"></i>上传代码</button>
@@ -157,7 +157,7 @@
           </div>
           <canvas id="chessboard"></canvas>
           <div class="footer_pannel">
-            <div class="col-md-8"><span id="player-status">White：#  Black：#</span></div>
+            <div class="col-md-8"><span id="player-status">White：# , Black：#</span></div>
             <div class="col-md-4" style="text-align:right;">
               <button type="button" name="download" id="download" class="btn btn-default" data-toggle="modal" data-target="#info-modal-box" style="color:white;background-color:#1ABC9C;">Download Chess Data</button>
             </div>
