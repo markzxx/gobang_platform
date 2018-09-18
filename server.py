@@ -13,6 +13,7 @@ from aiohttp_session import setup, get_session, session_middleware
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 
 DB_NAME = "sqlite.db"
+
 class Http_handler:
     @aiohttp_jinja2.template('index')
     async def index(self, request):
@@ -27,7 +28,8 @@ class Http_handler:
     @aiohttp_jinja2.template('logout')
     async def logout(self, request):
         session = await get_session(request)
-        del session['sid']
+        if 'sid' in session:
+            del session['sid']
         return aiohttp_jinja2.render_template('login.html', request, {})
         
     @aiohttp_jinja2.template('login')
@@ -44,6 +46,8 @@ class Http_handler:
             row = await cursor.fetchone()
             await cursor.close()
             if row and row[1] != data['pwd']:
+                raise self.redirect(request.app.router, 'login')
+            elif not row:
                 raise self.redirect(request.app.router, 'login')
             # elif not row:
             #     await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
@@ -205,6 +209,7 @@ async def finish(soid, data):
     del games[game_id]
     del players[data[0]]
     await sio.emit('finish', data[4], room=data[0])
+    time.sleep(0.2)
 
 @sio.on('error')
 async def finish(soid, data):
