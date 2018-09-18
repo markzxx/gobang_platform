@@ -1,55 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="static/css/index.css">
-    <title>Login</title>
-</head>
-<style>
-    form {
-        align: center;
-    }
-</style>
-<body>
-    <h2 class="title">Login</h2>
-    <div class="divbody">
-        <form action="login" method="post" accept-charset="utf-8" onsubmit="return jsMd5();">
-            <center>
-            <table class="login" style="border-collapse:separate; border-spacing:10px 10px;">
-            <tr>
-            <td>Student Id:</td>
-            <td><input id="sid" title="sid" name="sid" type="text" value=""/></td>
-            </tr>
-            <tr>
-            <td>Password:</td>
-            <td><input id="pwd" title="pwd" name="pwd" type="password" value=""/></td>
-            </tr>
-            <tr>
-                <td colspan="2" align="right"><input type="submit" value="submit" /></td>
-            </tr>
-            <!--<tr><td colspan="2"><span>Your first login is a registration.</span></td></tr>-->
-            </table>
-                <p>Registration is closed, contact QQ565323034 for help.</p>
-            </center>
-        </form>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="static/img/login.ico">
+  <title>login</title>
+  <link rel="stylesheet" type="text/css" href="static/css/normalize.css" />
+  <link rel="stylesheet" type="text/css" href="static/css/demo.css" />
+  <link rel="stylesheet" href="static/css/jquery.jgrowl.min.css">
 
-    </div>
-    <script src="static/lib/md5.js"> </script>
-    <script>
-    function jsMd5(){
-        var sid = document.getElementById("sid");
-        var pwd = document.getElementById("pwd");
-        if(pwd.value == "" || sid.value == "") {
-            alert("Student id and password should not be empty!")
-            return false;
-        }
-        pwd.value = md5(pwd.value);
-        return true;
+  <link rel="stylesheet" type="text/css" href="static/css/button.css" />
+  <link rel="stylesheet" type="text/css" href="static/css/component.css" />
+  <!--[if IE]>
+<script src="static/js/html5.js"></script>
+<![endif]-->
+  <style>
+    input::-webkit-input-placeholder {
+      color: rgba(0, 0, 0, 0.726);
     }
-	</script>
+
+    input::-moz-placeholder {
+      /* Mozilla Firefox 19+ */
+      color: rgba(0, 0, 0, 0.726);
+    }
+
+    input:-moz-placeholder {
+      /* Mozilla Firefox 4 to 18 */
+      color: rgba(0, 0, 0, 0.726);
+    }
+
+    input:-ms-input-placeholder {
+      /* Internet Explorer 10-11 */
+      color: rgba(0, 0, 0, 0.726);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container demo-1">
+    <div class="content">
+      <div id="large-header" class="large-header">
+        <canvas id="demo-canvas"></canvas>
+        <div class="logo_box">
+          <h3>Artificial Intelligence</h3>
+          <form action="login" method="post" accept-charset="utf-8" onsubmit="return jsMd5();">
+            <div class="input_outer">
+              <span class="u_user"></span>
+              <input id="sid" title="sid" name="sid" type="text" class="text" value="" style="color: #000000 !important" placeholder="Student Id">
+            </div>
+            <div class="input_outer">
+              <span class="us_uer"></span>
+              <input id="pwd" title="pwd" name="pwd" type="password" class="text" style="color: #000000 !important; position:absolute; z-index:100;" value="" placeholder="Password">
+            </div>
+            <div id="LOGIN" class="mb2"><button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted" type="submit" data-text="登录"><span>Login</span></button></div>
+            <div id="help_text"><cite>Registration is closed, contact QQ565323034 for help.</cite></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /container -->
+  <script src="static/js/TweenLite.min.js"></script>
+  <script src="static/js/EasePack.min.js"></script>
+  <script src="static/js/jquery.js"></script>
+  <script src="static/js/demo-1.js"></script>
+  <script src="static/js/jquery.jgrowl.min.js"></script>
+  <div style="text-align:center;">
+  </div>
+  <script src="static/js/md5.js"></script>
+  <script>
+    function jsMd5() {
+      var sid = document.getElementById("sid");
+      var pwd = document.getElementById("pwd");
+
+      if (pwd.value == "" || sid.value == "") {
+        return false;
+      }
+      pwd.value = md5(pwd.value);
+      return true;
+    }
+  </script>
 </body>
 
 </html>

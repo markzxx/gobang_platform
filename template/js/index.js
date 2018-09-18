@@ -6,11 +6,20 @@ var IS_BLACK = true; // 是否黑棋
 var IS_GAME_OVER = false; // 游戏是否结束
 var IS_CAN_STEP = false; // 是否可以下棋（对手下棋时己方不能下棋）
 var COMPETITOR_NAME = '';    // 对手的昵称
-
+var range_max=0;
+var Page={
+  each_num:15,
+  items_num:0,
+  page_num:0,
+  items:[],
+  now_page:0,//Where are you.
+  page_html:""
+}
 // 设置canvas的content的
 var ctx = null;
 
 var socket = io('http://10.20.96.148:8080');
+// var socket = io('http://127.0.0.1:8080');
 // 棋盘坐标数组
 var arrPieces = new Array();
 var chess_log = null;
@@ -90,17 +99,18 @@ function clientSocket(socket) {
     });
 
     socket.on('go', function (info) {
-        console.log(info);
+        // console.log(info);
         drawNewPiece(info[0], info[1], info[2]);
         chess_log.push(info);
     });
 
     socket.on('finish', function (winner) {
-        $('.play').text("Play");
-        $('.play').removeAttr("disabled");
+        $('#play').removeAttr("disabled");
         $('.range').removeAttr("disabled");
         $('#range').attr('max', chess_log.length);
         $('#range').val(chess_log.length);
+        $('#range_num').val(chess_log.length);
+        range_max=chess_log.length;
         if(winner==0)
             setGameStatus('Game draw!');
         else
@@ -113,46 +123,85 @@ function clientSocket(socket) {
 }
 
 function rd(n,m){
-    var c = m-n+1;  
+    var c = m-n+1;
     return Math.floor(Math.random() * c + n);
 }
 
 // 绑定各种按键
 function bindButtonClick(socket) {
-    $('.play').click(function () {
+    $('#play').click(function () {
         var $this = $(this);
         var status = $this.text();
-
-        $this.text('Playing');
         $this.attr("disabled", "disabled");
         $(".user-status").attr("disabled", "disabled");
-  
+
         watch($this.data('id'));
         socket.emit('play', {'sid':$this.data('id'), 'action':$this.attr("data-name")});
     });
 
+    $("#range_num").change(function(event) {
+      var num=parseInt($("#range_num").val());
+      if(num<=range_max && num>=0){
+        $('#range').val(num).change();
+      }
+    });
+
+    $("#start").click(function(){
+      $('#range_num').val(0).change();
+      $('#range').val(0).change();
+    });
     $('#left').click(function () {
-        $('#range').val($('#range').val()-1).change();
+      if(parseInt($('#range_num').val())-1>=0){
+        $('#range_num').val(parseInt($('#range_num').val())-1);
+        $('#range').val(parseInt($('#range_num').val())).change();
+      }
     });
 
     $('#right').click(function () {
-        $('#range').val($('#range').val()*1+1).change();
-        
+      if(parseInt($('#range_num').val())+1<=range_max){
+        $('#range_num').val(parseInt($('#range_num').val())+1);
+        $('#range').val(parseInt($('#range_num').val())).change();
+      }
+    });
+
+    $('#big-right').click(function () {
+      if(parseInt($('#range').val())+5<=range_max){
+        $('#range_num').val(parseInt($('#range').val())+5).change();
+      }else{
+        $('#range_num').val(range_max).change();
+      }
+        $('#range').val(parseInt($('#range').val())*1+5).change();
+    });
+    $('#big-left').click(function () {
+      if(parseInt($('#range').val())-5>=0)
+        {$('#range_num').val(parseInt($('#range').val())-5).change();}
+      else{
+        $('#range_num').val(0).change();}
+        $('#range').val(parseInt($('#range').val())-5).change();
+    });
+    $("#end").click(function(event) {
+      $('#range_num').val(range_max).change();
+        $('#range').val(range_max).change();
     });
 
     $('#range').change(function () {
     drawChessBoard();
-    for(var i=0; i<$('#range').val(); i++)
+    for(var i=0; i<parseInt($('#range').val()); i++)
         drawNewPiece(chess_log[i][0], chess_log[i][1], chess_log[i][2]);
     });
 
     $('#download').click(function () {
+      try{
+        $("#info-modal-box-msg").html("<p>Download Successfully</p>");
         var aTag = document.createElement('a');
         var blob = new Blob([chess_log.join('\n')]);
         aTag.download = "chess_log.txt";
         aTag.href = URL.createObjectURL(blob);
         aTag.click();
         URL.revokeObjectURL(blob);
+      }catch(err){
+        $("#info-modal-box-msg").html("<p>Some errors happened. Please make sure you have played a game.</p>");
+      }
     });
 /*
     $('.Go').click(function (e) {
@@ -164,31 +213,96 @@ function bindButtonClick(socket) {
 function watch(sid){
     $('.user-status').text('watch');
     $('.user-status').removeClass('gaming-status');
+    $('.user-status').removeClass('label_active');
     $('#'+sid).addClass('gaming-status');
-    $('#'+sid).text('watching');
+    $('#'+sid).addClass('label_active');
     $('#watch_id').data('id', sid);
     socket.emit('watch', sid);
 }
-
+// change userlist pages
+function change_page(id){
+  Page.now_page=id;
+  Page.page_html="";
+  var user_rank_html = '<tr class="active"><th>#</th>'+'<th width="25%">Sid</th>'+'<th>Score</th>'+'<th>Status</th></tr>';
+  let page_active="";
+  for(var i=0;i<Page.page_num;i++){
+    if(i==Page.now_page){
+      page_active="page_active";
+    }else{
+      page_active="";
+    }
+    Page.page_html+="<button class='btn btn-default btn-sm "+page_active+"' onclick='change_page("+i+")'>"+(parseInt(i)+1)+"</button>";
+  }
+  for (var index = Page.now_page*Page.each_num; index < (((Page.now_page+1)*Page.each_num)>Page.items_num?Page.items_num:(Page.now_page+1)*Page.each_num) ; index++) {
+    user_rank_html+=Page.items[index];
+  }
+  user_rank_html+="<tr class='active' id='page_box' style='text-align:center;'><td colspan='4'>"+
+  // "<button class='btn btn-info btn-sm' id='page-left'><i class='glyphicon glyphicon-arrow-left'></i></button>"+
+  Page.page_html+
+  // "<button class='btn btn-info btn-sm' id='page-right'><i class='glyphicon glyphicon-arrow-right'></i></button>"+
+  "</td></tr>";
+  $('#rank_table').html(user_rank_html);
+  $('.user-status').click(function (e) {
+      watch($(this).attr('id'));
+  });
+  $('#'+$('#watch_id').data('id')).addClass('gaming-status');
+}
 // 加载在线用户列表
 function handlebarsUserList(userList) {
-    var user_template = '<tr>'
-                        +'<th>Sid</th>'
-                        +'<th>Score</th>'
-                        +'<th>Status</th>'
-                        +'</tr>';
-    $.each(userList, function (index, value) {
-        user_template += '<tr><td><p class="user-id">'+value.sid+'</p></td>'
-                    +'<td><p class="user-score">'+value.score+'</p></td>'
-                    +'<td><button class="user-status" id="'+value.sid+'" >watch</button></td></tr>';
-        
-    });
-    $('.player').html(user_template);
+    // let str_text='[';
+    // for (var i = 0; i < userList.length; i++) {
+    //   str_text+=JSON.stringify(userList[i])+",";
+    // }
+    // str_text=str_text.substring(0,str_text.length-1);
+    // str_text+="]";
+    // console.log(str_text);
+    var now_sid=parseInt($("#sid").attr("data-id"));
+    var user_rank_html = '<tr class="active"><th>#</th>'+'<th width="25%">Sid</th>'+'<th>Score</th>'+'<th>Status</th></tr>';
+    let state="active";
+    //pages分页
+    Page.items_num=userList.length;
+    Page.page_num=Math.ceil(Page.items_num/Page.each_num);
+    Page.now_page=Page.now_page;//Where are you.
+    Page.page_html="";
+
+    let value;
+    for (var i = 0; i < Page.page_num; i++) {
+      for(var index=i*Page.each_num;index<(((i+1)*Page.each_num)>Page.items_num?Page.items_num:(i+1)*Page.each_num);index++){
+        value=userList[index];
+        // if(index%2==0)state="active";
+        // if(index%2!=0)state="";
+        if(parseInt(value.sid)==parseInt(now_sid))
+        {"success";
+          Page.now_page=i;
+        }
+        Page.items.push('<tr class="'+state+'"><td>'+(index+1)+'</td><td><p class="user-id">'+value.sid+'</p></td>'+'<td><p class="user-score">'+value.score+'</p></td>'+'<td><button class="label user-status" id="'+value.sid+'" >watch</button></td></tr>')
+      }
+    }
+
+    let page_active="";
+    for(var i=0;i<Page.page_num;i++){
+      if(i==Page.now_page){
+        page_active="page_active";
+      }else{
+        page_active="";
+      }
+      Page.page_html+="<button class='btn btn-default btn-sm "+page_active+"' onclick='change_page("+i+")'>"+(parseInt(i)+1)+"</button>";
+    }
+
+    //Default : show page which in you are.log((((i+1)*Page.each_num)>Page.items_num?Page.items_num:(i+1)*Page.each_num))
+    for (var index = Page.now_page*Page.each_num; index < (((Page.now_page+1)*Page.each_num)>Page.items_num?Page.items_num:(Page.now_page+1)*Page.each_num) ; index++) {
+      user_rank_html+=Page.items[index];
+    }
+    user_rank_html+="<tr class='active' id='page_box' style='text-align:center;'><td colspan='4'>"+
+    // "<button class='btn btn-info btn-sm' id='page-left'><i class='glyphicon glyphicon-arrow-left'></i></button>"+
+    Page.page_html+
+    // "<button class='btn btn-info btn-sm' id='page-right'><i class='glyphicon glyphicon-arrow-right'></i></button>"+
+    "</td></tr>";
+    $('#rank_table').html(user_rank_html);
     $('.user-status').click(function (e) {
         watch($(this).attr('id'));
     });
     $('#'+$('#watch_id').data('id')).addClass('gaming-status');
-    $('#'+$('#watch_id').data('id')).text('watching');
 }
 
 // 设置游戏状态

@@ -1,72 +1,230 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <!--<link rel="stylesheet" href="static/css/reset.css">-->
-    <link rel="stylesheet" href="static/css/index.css">
-    <title>AI VS Platform</title>
+  <title>Home</title>
+  <!---->
+  <link href="static/css/bootstrap.css" rel="stylesheet" type="text/css" media="all" />
+  <link href="static/css/style.css" rel="stylesheet" type="text/css" media="all" />
+  <link rel="stylesheet" href="static/css/swipebox.css">
+  <link rel="shortcut icon" href="static/img/login.ico">
+  <!--页面加载start-->
+  <link rel="stylesheet" type="text/css" href="static/css/loader.css">
+  <!---->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="keywords" content="" />
+  <!---->
+  <script src="static/js/jquery.min.js"></script>
+  <script src="static/js/bootstrap.min.js"></script>
+  <script src="static/js/underscore.min.js"></script>
+  <script src="static/js/socket.io.js"></script>
+  <script src="static/js/handlebars.js"></script>
+  <script src="static/js/index.js"></script>
+
+  <!---->
+  <link href='https://fonts.proxy.ustclug.org/css?family=Voltaire' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.proxy.ustclug.org/css?family=PT+Sans+Narrow:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.proxy.ustclug.org/css?family=Open+Sans:400,800italic,800,700italic,700,600italic,600,400italic,300italic,300' rel='stylesheet' type='text/css'>
+  <!--startsmothscrolling-->
+  <script type="text/javascript" src="static/js/move-top.js"></script>
+  <script type="text/javascript" src="static/js/easing.js"></script>
+  <script type="text/javascript">
+    jQuery(document).ready(function($) {
+      $(".scroll").click(function(event) {
+        event.preventDefault();
+        $('html,body').animate({
+          scrollTop: $(this.hash).offset().top
+        }, 1200);
+      });
+    });
+  </script>
+  <!--script-->
+  <script src="static/js/responsiveslides.min.js"></script>
+  <script>
+    $(function() {
+      $("#slider").responsiveSlides({
+        auto: true,
+        nav: true,
+        speed: 500,
+        namespace: "callbacks",
+        pager: true,
+      });
+    });
+  </script>
+
 </head>
 
 <body>
-    <h2 class="title">AI VS Platform</h2>
-    <div class="main-body">
-        <div class="board">
-            <div> 
-                <p>
-                    <form action="logout" method="get" accept-charset="utf-8" enctype="multipart/form-data">
-                    <span id="sid" data-id={{sid}}>Hello: {{sid}}</span>
-                    <span><button class="logout">logout</button></span>
-                    </form>
-                </p>
-                <form action="upload" method="post" accept-charset="utf-8" enctype="multipart/form-data">
-                    <p id='watch_id' data-id={{sid}} visibility=false></p>
-                    <span>Upload Your Code (only one .py file is required)</span>
-                    <input type=file id=code name="code" style="visibility:hidden" onchange=filepath.value=this.value>
-                    <input type=textfield id=filepath>
-                    <input type=button id=filebutton value="choose file" onclick="code.click()">
-                    <input type="submit" value="submit"/>
-                </form>
-            </div>
-            <div class="play-status">
-                <span>Status：</span>
-                <span id="current_status">not Started</span>
-<!--                <span><button class="Go" data-id="{{sid}}" data-name="play">Go</button></span>   -->
-                <span><button class="play" data-id="{{sid}}" data-name="play">Play</button></span>
-            </div>
-            <canvas id="chessboard"></canvas>
-        </div>
-        <div class="player_list">
-            <p class="onine-title">Player List</p>
-            <div id="user_list">
-                <table class="player" width="100%">
-                <tr>
-                    <th>Sid</th>
-                    <th>Score</th>
-                    <th>Status</th>
-                </tr>
-                <p id="rank_list"></p>
-                </table>
-            </div>
-        </div>
-        <div class="chess_log">
 
-            <span><button class="range left" id="left">front</button></span>
-            <input class="range" type="range" id="range" max="100" width="80%"/>
-            <span><button class="range right" id="right">next</button></span>
-            <span><button class="range download" id="download">download</button></span>
+
+
+  <script type="text/javascript">
+    // 等待所有加载
+    $(window).load(function() {
+      $('body').addClass('loaded');
+      $('#loader-wrapper .load_title').remove();
+    });
+  </script>
+
+  <div id="loader-wrapper">
+    <div id="loader"></div>
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+    <div class="load_title">Loading AI VS Platform<br><span>V1.0</span></div>
+  </div>
+  <!--页面加载end-->
+
+  <!--header-->
+  <div class="banner">
+    <div class="container">
+      <div class="navigation wow fadeInLeft animated" data-wow-delay=".5s">
+        <nav class="navbar navbar-default">
+          <!-- Brand and toggle get grouped for better mobile display -->
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+								<span class="sr-only">Toggle navigation</span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+								<span class="icon-bar"></span>
+							</button>
+          </div>
+          <!-- Collect the nav links, forms, and other content for toggling -->
+          <div class="collapse navbar-collapse nav-wil" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right link-effect">
+              <li><a href="#upload" class="scroll">AI VS Platform</a></li>
+              <!-- <li><a href="#chess" class="scroll">下棋</a></li>
+              <li><a href="#data" class="scroll">数据</a></li>
+              <li><a href="#rank" class="scroll">排名</a></li>
+              <li><a href="#contact" class="scroll">反馈</a></li> -->
+            </ul>
+            <div style="position:absolute;right:0px;width:20%;height:100%;">
+              <form action="logout" method="get" accept-charset="utf-8" enctype="multipart/form-data">
+                <ul class="nav navbar-nav navbar-right link-effect">
+                  <li><a href="javascript:void(0);" style="cursor:default;" id="sid" data-id="{{sid}}">Hello,{{sid}}</a></li>
+                  <li><a href="javascript:$('#logout').trigger('click');" style="color:#1ABC9C">Logout</a></li>
+                </ul>
+                <button style="display:none" id="logout" name="logout" type="submit"></button>
+              </form>
             </div>
-        <div class="player-status">
-                <span id="player-status">Player:</span>
-            </div>
+          </div>
+          <!-- /.navbar-collapse -->
+        </nav>
+      </div>
+      <div class="banner-info">
+        <h1 class="wow fadeInRight animated" data-wow-delay=".5s">Renju</h1>
+        <p class="wow fadeInRight animated" data-wow-delay=".5s">Welcome to AI VS Platform. In this platform,you can Upload your code and start a game with appropriate opponents.</p>
+        <div class="upload_code">
+          <button class="btn btn-primary" type="button" onclick="$('#code').trigger('click');" id="trigger_code" name="trigger_code" style="background-color:#1ABC9C;"><i class="glyphicon glyphicon-upload"></i>上传代码</button>
+
+          <form action="upload" method="post" accept-charset="utf-8" enctype="multipart/form-data" style="display:none">
+            <p id='watch_id' data-id={{sid}} visibility=false></p>
+            <span>Upload Your Code (only one .py file is required)</span>
+            <input type="file" id="code" name="code" style="visibility:hidden" onchange="filepath.value=this.value;$('#upload_submit').trigger('click');">
+            <input type="textfield" id="filepath">
+            <input type="button" id="filebutton" value="choose file" onclick="code.click()">
+            <input type="submit" id="upload_submit" name="upload_submit" value="submit" />
+          </form>
+        </div>
+      </div>
 
     </div>
-    <script src="static/lib/jquery.min.js"></script>
-    <script src="static/lib/socket.io.js"></script>
-    <script src="static/lib/handlebars.js"></script>
-    <script src="static/js/index.js"></script>
+  </div>
+  <div class="content">
+    <!--about-->
+
+    <div class="about-w3" id="upload">
+      <div class="container">
+        <div class="play_chess">
+          <div class="header_pannel">
+            <div class="col-md-3" style="font-size:.8em;text-align:left;">
+              <span style="margin-left:-20px;">Status: </span><span id="current_status" style="position:absolute;">not Started</span>
+            </div>
+            <div class="col-md-6">
+              <button type="button" class="btn btn-default" id="start"><i class="glyphicon glyphicon-step-backward"></i></button>
+              <button type="button" class="btn btn-default" id="big-left"><i class="glyphicon glyphicon-backward"></i></button>
+              <button type="button" class="btn btn-default" id="left"><i class="glyphicon glyphicon-triangle-left"></i></button>
+              <span><input class="chess_num" id="range_num" style="width:52px;font-size:0.8em;border:1px #908a90 solid;padding:10px;" value="0"></span>
+              <button type="button" class="btn btn-default" id="right"><i class="glyphicon glyphicon-triangle-right"></i></button>
+              <button type="button" class="btn btn-default" id="big-right"><i class="glyphicon glyphicon-forward"></i></button>
+              <button type="button" class="btn btn-default" id="end"><i class="glyphicon glyphicon-step-forward"></i></button>
+              <input class="range" type="range" id="range" style="display:none;" max="100" width="80%" />
+            </div>
+            <div class="col-md-3">
+              <button type="button" data-id="{{sid}}" data-name="play" class="btn btn-success" id="play" style="float:right;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i></button>
+            </div>
+          </div>
+          <canvas id="chessboard"></canvas>
+          <div class="footer_pannel">
+            <div class="col-md-4 col-md-offset-8" style="text-align:right;">
+              <button type="button" name="download" id="download" class="btn btn-default" data-toggle="modal" data-target="#info-modal-box" style="color:white;background-color:#1ABC9C;">Download Chess Data</button>
+            </div>
+          </div>
+        </div>
+        <div class="rank_list">
+          <table id="rank_table" class="table table-hover" style="border: 1px solid #bec1c3; padding:2%;z-index:5;border-collapse: separate;border-radius: 8px;box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);">
+          </table>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal fade" tabindex="-1" role="dialog" id="info-modal-box">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Information</h4>
+          </div>
+          <div class="modal-body" id="info-modal-box-msg">
+            <p>Download Successfully</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal" style="background-color:#1ABC9C;color:white;">Close</button>
+          </div>
+        </div>
+        <!-- /.modal-content -->
+      </div>
+      <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+    <!-- /.modal -->
+    <!-- <div class="services" id="chess">
+      <div class="container">
+      </div>
+    </div>
+    <div class="gallery" id="data">
+      <div class="container"></div>
+    </div>
+    <div class="count-agileits" id="rank">
+      <div class="container"></div>
+    </div>
+    <div class="team-w3l" id="contact">
+      <div class="container"></div>
+    </div>
+    <div class="journal-w3l" id="news">
+      <div class="container"></div>
+    </div> -->
+  </div>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      /*
+							var defaults = {
+					  			containerID: 'home', // fading element id
+								containerHoverID: 'toTopHover', // fading element hover id
+								scrollSpeed: 1200,
+								easingType: 'linear'
+					 		};
+							*/
+
+      $().UItoTop({
+        easingType: 'easeOutQuart'
+      });
+
+    });
+  </script>
+  <a href="#" id="home" style="display: block;"> <span id="toTopHover" style="opacity: 1;"> </span></a>
+
 </body>
 
 </html>

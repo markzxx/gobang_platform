@@ -1,93 +1,103 @@
+canvas {
+  display: block;
+  margin: 20px auto;
+  /*border: 1px solid #eee; */
+  background: rgba(240, 194, 135, .9);
+  box-shadow: -2px -2px 2px #efefef, 5px 5px 5px #bcbcbc;
+}
+
+/*
 ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-    background-color: #eee;
+  width: 4px;
+  height: 4px;
+  background-color: #eee;
 }
+
 ::-webkit-scrollbar-track {
-    border-radius: 8px;
-    background-color: #f9f9f9;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
+
 ::-webkit-scrollbar-thumb {
-    height: 8px;
-    border-radius: 8px;
-    background-color: #eee;
+  height: 8px;
+  border-radius: 8px;
+  background-color: #eee;
 }
 
 .main-body {
-    position: relative;
-    margin: 20px auto;
-    width: 750px;
+  position: relative;
+  margin: 20px auto;
+  width: 750px;
 }
+
 h2.title {
-    font-size: 30px;
-    line-height: 50px;
-    text-align: center;
+  font-size: 30px;
+  line-height: 50px;
+  text-align: center;
 }
+
 .board {
-    margin-right: 350px;
+  margin-right: 350px;
 }
+
 .user-name {
-    text-align: center;
+  text-align: center;
 }
+
 .play-status {
-    margin-top: 20px;
+  margin-top: 20px;
 }
-canvas {
-    display: block;
-    margin: 20px auto;
-    /* border: 1px solid #eee; */
-    background: rgba(240, 194, 135, .9);
-    box-shadow: -2px -2px 2px #efefef, 5px 5px 5px #bcbcbc;
-}
+
 .player_list {
-    position: absolute;
-    top: 0;
-    right: 20px;
-    width: 250px;    
+  position: absolute;
+  top: 0;
+  right: 20px;
+  width: 250px;
 }
+
 .onine-title {
-    text-align: center;
-    line-height: 1;
-    font-size: 14px;
-    margin-bottom: 20px;
+  text-align: center;
+  line-height: 1;
+  font-size: 14px;
+  margin-bottom: 20px;
 }
+
 #user_list {
-    height: 650px;
-    padding: 0 10px;
-    overflow-y: scroll;
-    border: 1px solid #ddd;
+  height: 650px;
+  padding: 0 10px;
+  overflow-y: scroll;
+  border: 1px solid #ddd;
 }
 
 .user-item {
-    overflow: hidden;
-    margin: 5px 0;
+  overflow: hidden;
+  margin: 5px 0;
 }
 
 .user-info {
-    float: left;
+  float: left;
 }
 
 .user-status {
-    float: right;
-    width: 80px;
-    text-align: center;
-    cursor: pointer;
+  float: right;
+  width: 80px;
+  text-align: center;
+  cursor: pointer;
 }
 
 .gaming-status {
-    background: red;
+  background: red;
 }
 
 .gaming-current {
-    background: green;
+  background: green;
 }
 
-.player
-{  
-    vertical-align: middle;
-    text-align: center;  
+.player {
+  vertical-align: middle;
+  text-align: center;
 }
 
 .play {
-    float: right;
-}
+  float: right;
+} */
