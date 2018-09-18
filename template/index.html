@@ -157,14 +157,17 @@
           </div>
           <canvas id="chessboard"></canvas>
           <div class="footer_pannel">
-            <div class="col-md-4 col-md-offset-8" style="text-align:right;">
+            <div class="col-md-8"><span id="player-status">White：#  Black：#</span></div>
+            <div class="col-md-4" style="text-align:right;">
               <button type="button" name="download" id="download" class="btn btn-default" data-toggle="modal" data-target="#info-modal-box" style="color:white;background-color:#1ABC9C;">Download Chess Data</button>
             </div>
           </div>
         </div>
-        <div class="rank_list">
-          <table id="rank_table" class="table table-hover" style="border: 1px solid #bec1c3; padding:2%;z-index:5;border-collapse: separate;border-radius: 8px;box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);">
-          </table>
+        <div class="rank_list dialog">
+          <div class="dialog-title">
+            <table id="rank_table" class="table table-hover dialog-title" style="border: 1px solid #bec1c3; padding:2%;z-index:5;border-collapse: separate;border-radius: 8px;box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);">
+            </table>
+          </div>
         </div>
 
       </div>

@@ -278,6 +278,10 @@ h3.tittle {
   width: 330px;
   height: 600px;
   top: 44%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 #page_box button {
