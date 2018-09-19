@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <form action="resetpwd" method="post" accept-charset="utf-8" >
+            <center>
+            <table class="login" style="border-collapse:separate; border-spacing:10px 10px;">
+            <tr>
+            <td>Student Id:</td>
+            <td><input id="sid" title="sid" name="sid" type="text" value=""/></td>
+            </tr>
+            <tr>
+            <td>Old Password:</td>
+            <td><input id="oldpwd" title="oldpwd" name="oldpwd" type="password" value=""/></td>
+            </tr>
+             <tr>
+            <td>Password:</td>
+            <td><input id="newpwd" title="newpwd" name="newpwd" type="password" value=""/></td>
+            </tr>
+            <tr>
+                <td colspan="2" align="right"><input type="submit" value="submit" onsubmit="return jsMd5();" /></td>
+            </tr>
+            </table>
+            </center>
+        </form>
+    <script src="lib/md5.js"> </script>
+
+    <script>
+    function jsMd5(){
+        var sid = document.getElementById("sid");
+        var oldpwd = document.getElementById("oldpwd");
+        var newpwd = document.getElementById("newpwd");
+        if(oldpwd.value == "" || sid.value == "" || newpwd.value =="") {
+            alert("Student id and password should not be empty!")
+            return false;
+        }
+        oldpwd.value = md5(oldpwd.value);
+        newpwd.value = md5(newpwd.value);
+        return true;
+    }
+	</script>
+</body>
+</html>

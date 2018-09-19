@@ -55,6 +55,23 @@ class Http_handler:
         session['sid'] = data['sid']
         raise self.redirect(request.app.router, 'index')
         
+    @aiohttp_jinja2.template('resetjump')
+    async def resetjump(self, request):
+        data = await request.post()
+        return aiohttp_jinja2.render_template('resetpwd.html', request, {})
+
+    @aiohttp_jinja2.template('resetpwd')
+    async def resetpwd(self, request):
+        data = await request.post()
+        async with aiosqlite.connect(DB_NAME) as db:
+            cursor = await db.execute('SELECT * FROM users where sid={}'.format(data['sid']))
+            row = await cursor.fetchone()
+            await cursor.close()
+            if row and row[1] == data['oldpwd']:
+                await db.execute("UPDATE users set password={} where sid={}".format(data['newpwd'],data['sid']))
+                await db.commit()
+        return aiohttp_jinja2.render_template('login.html', request, {})
+    
     async def upload(self, request):
         session = await get_session(request)
         sid = session['sid']
@@ -100,7 +117,11 @@ app.add_routes([web.get('/', handler.index, name='index'),
                 web.get('/login', handler.login, name='login'),
                 web.post('/login', handler.login, name='login'),
                 web.get('/logout', handler.logout, name='logout'),
-                web.post('/upload', handler.upload, name='upload')])
+                web.post('/upload', handler.upload, name='upload'),
+                web.post('/resetpwd',handler.resetpwd, name='reset'),
+                web.get('/resetpwd', handler.resetpwd, name='reset'),
+                web.post('/resetjump', handler.resetjump, name='resetjump'),
+                web.get('/resetjump', handler.resetjump, name='resetjump')])
 fernet_key = fernet.Fernet.generate_key()
 secret_key = base64.urlsafe_b64decode(fernet_key)
 setup(app, EncryptedCookieStorage(secret_key))
