@@ -3,7 +3,9 @@ import numpy as np
 from timeout_decorator import timeout
 import time
 import sys
-
+import resource
+import traceback
+import timeout_decorator
 from socketIO_client import SocketIO, BaseNamespace
 
 class Namespace(BaseNamespace):
@@ -14,6 +16,9 @@ class Namespace(BaseNamespace):
         for d in data:
             print(d)
 
+def limit_memory(maxsize):
+    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+    resource.setrlimit(resource.RLIMIT_AS, (maxsize, hard))
 
 def check_chess_board(chessboard,chessboard_size,pos,color):
     winner = 0
@@ -99,13 +104,21 @@ class God(object):
         if color ==1:
             try:
                 timeout(self.time_out)(self.white.go)(self.chessboard)#timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
-            except Exception:
+            except MemoryError:
+                memory_error = traceback.format_exc()
+                self.memory_fail(memory_error)
+                return ''
+            except timeout_decorator.timeout_decorator.TimeoutError:
                 pass
             tem_list = self.white.candidate_list
         else:
             try:
                 timeout(self.time_out)(self.black.go)(self.chessboard)#timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
-            except Exception:
+            except MemoryError:
+                memory_error = traceback.format_exc()
+                self.memory_fail(memory_error)
+                return ''
+            except timeout_decorator.timeout_decorator.TimeoutError:
                 pass
             tem_list = self.black.candidate_list
 
@@ -139,6 +152,31 @@ class God(object):
         self.winner = -color
         self.finish = True
 
+    def memory_fail(self, message):
+        self.finish = True
+        p1 = str(self.color_user_map[-1])
+        p2 = str(self.color_user_map[1])
+        wrong_play = ''
+        winner_play = ''
+        if p1 in message and p2 not in message:
+            wrong_play = p1
+            winner_play = p2
+        elif p2 in message and p1 not in message:
+            wrong_play = p2
+            winner_play = p1
+        elif p2 not in message and p1 not in message:
+            self.error+= " Memory error message error in trackback MemoryError"
+        else:
+            self.error +=" Other error in trackback MemoryError"
+
+        if wrong_play or winner_play:
+            assert winner_play and wrong_play
+            self.error += " Dear " + wrong_play + ": Memory out"
+            self.winner = self.user_color_map[winner_play]
+
+
+#def fight(color_map,white_path, black_path, size, time_interval,player, start_time):
+
 if __name__ == '__main__':
     def deal_go_data(go_data):
         for i in range(2,5):
@@ -157,14 +195,15 @@ if __name__ == '__main__':
     time_interval = float(arg_list[5])
     player = int(arg_list[6])
 
+
+    memory_size = 10*1024**2 # In bytes
+    limit_memory(memory_size)
+
     god = God(white_path, black_path, size, time_interval)
 
     #begin_data = god.begin
     begin_data = (player,0)
     go_data = [begin_data[0], begin_data[1], -1, -1, 0]
-
-
-    #print(go_data)
 
     tem_color = -1
     while not god.finish:
@@ -177,7 +216,6 @@ if __name__ == '__main__':
         socketIO.emit("go", deal_go_data(go_data))
         #print(go_data)
 
-
         tem_color = 1
         god.update(color=tem_color)
         if god.finish: break
@@ -186,7 +224,6 @@ if __name__ == '__main__':
         go_data[4] = color_map[tem_color]
         socketIO.emit("go", deal_go_data(go_data))
         #print(go_data)
-
 
     god.end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     if god.error:
@@ -204,7 +241,6 @@ if __name__ == '__main__':
     finish_data = (begin_data[0], begin_data[1], god.start_time, god.end_time, god.color_user_map[god.winner],
                    god.color_user_map[-god.winner])
     socketIO.emit("finish", finish_data)
-    #print(finish_data)
 
     time.sleep(1)
 
