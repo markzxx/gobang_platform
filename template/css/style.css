@@ -1176,13 +1176,13 @@ p.jour-link a:hover {
 
 @media(max-width:1440px) {
   .banner {
-    min-height: 792px;
+    min-height: 70px;
   }
 }
 
 @media(max-width:1366px) {
   .banner {
-    min-height: 756px;
+    min-height: 70px;
   }
   .banner-info {
     margin: 15em 0 0;
@@ -1191,7 +1191,7 @@ p.jour-link a:hover {
 
 @media(max-width:1280px) {
   .banner {
-    min-height: 702px;
+    min-height: 70px;
   }
   .banner-info {
     margin: 12em 0 0;
@@ -1242,7 +1242,7 @@ p.jour-link a:hover {
     font-size: 3.5em;
   }
   .banner {
-    min-height: 546px;
+    min-height: 70px;
   }
   .banner-info {
     margin: 8em 0 0;
@@ -1426,7 +1426,7 @@ p.jour-link a:hover {
     font-size: 1em;
   }
   .banner {
-    min-height: 450px;
+    min-height: 70px;
   }
   .banner-info {
     margin: 5em 0 0;
@@ -1513,7 +1513,7 @@ p.jour-link a:hover {
 
 @media(max-width:480px) {
   .banner {
-    background: url(../img/banner22.jpg) no-repeat -150px 0px;
+    background: url("../img/banner22.jpg") no-repeat -150px 0px;
     background-size: cover;
   }
   h2.tittle {
@@ -1584,7 +1584,7 @@ p.jour-link a:hover {
   .banner {
     background: url(../img/banner22.jpg) no-repeat -150px 0px;
     background-size: cover;
-    min-height: 400px;
+    min-height: 70px;
   }
   .logo a {
     font-size: 1.8em;
