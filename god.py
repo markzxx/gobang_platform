@@ -14,20 +14,8 @@ class Namespace(BaseNamespace):
         for d in data:
             print(d)
 
-def check_chess_board(chess_board, size):
-    result = False
-    winner = 0
-    func_list = [check_chess_board_by_line, check_chess_board_by_column, check_chess_board_by_right_diagonal, check_chess_board_by_left_diagonal ]
-    for f in func_list:
-        result, winner = f(chess_board = chess_board, size = size)
 
-        if result:
-            print(f)
-            print(winner)
-            break
-    return (result, winner)
-
-def check_chess_board2(chessboard,chessboard_size,pos,color):
+def check_chess_board(chessboard,chessboard_size,pos,color):
     winner = 0
     def get_chess(chess_pos_list, size):
         pos_list = []
@@ -142,7 +130,7 @@ class God(object):
             result = True
             self.winner = 0
         else:
-            result, winner = check_chess_board2(self.chessboard, self.chessboard_size, pos, color)
+            result, winner = check_chess_board(self.chessboard, self.chessboard_size, pos, color)
             self.finish = result
             self.winner = winner
         return result
