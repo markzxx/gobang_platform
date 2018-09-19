@@ -96,8 +96,10 @@ function clientSocket(socket) {
       drawNewPiece(value[1], value[2], value[3]);
       chess_log.push(value);
     });
-    var status = 'White：' + gameInfo.white + '\t\t\t , Black：' + gameInfo.black;
-    $('#player-status').text(status);
+    // var status = 'White：' + gameInfo.white + '\t\t\t , Black：' + gameInfo.black;
+    // $('#player-status').text(status);
+    $('#player-status1').text(gameInfo.white);
+    $('#player-status2').text(gameInfo.black);
     setGameStatus('Game Begin');
     $('.range').attr("disabled", "disabled");
   });
@@ -359,7 +361,7 @@ function handlebarsUserList(userList) {
 
 // 设置游戏状态
 function setGameStatus(status) {
-  $('#current_status').text(status);
+  $('#current_status').html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+status);
 }
 
 //设置ranklist可拖动

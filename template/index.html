@@ -114,9 +114,9 @@
       </div>
       <div class="banner-info">
         <h1 class="wow fadeInRight animated" data-wow-delay=".5s">Gomoku</h1>
-        <p class="wow fadeInRight animated" data-wow-delay=".5s">Welcome to AI VS Platform. In this platform,you can Upload your code and start a game with appropriate opponents.</p>
+        <p class="wow fadeInRight animated" data-wow-delay=".5s">Welcome to AI VS Platform. <br/>In this platform,you can Upload your code(only a .py file) and start a game with appropriate opponents.</p>
         <div class="upload_code">
-          <button class="btn btn-primary" type="button" onclick="$('#code').trigger('click');" id="trigger_code" name="trigger_code" style="background-color:#1ABC9C;"><i class="glyphicon glyphicon-upload"></i>上传代码</button>
+          <button class="btn btn-primary" type="button" onclick="$('#code').trigger('click');" id="trigger_code" name="trigger_code" style="background-color:#1ABC9C;"><i class="glyphicon glyphicon-upload"></i>&nbsp;Upload Code</button>
 
           <form action="upload" method="post" accept-charset="utf-8" enctype="multipart/form-data" style="display:none">
             <p id='watch_id' data-id={{sid}} visibility=false></p>
@@ -138,8 +138,8 @@
       <div class="container">
         <div class="play_chess">
           <div class="header_pannel">
-            <div class="col-md-3" style="font-size:.8em;text-align:left;">
-              <span style="margin-left:-20px;">Status: </span><span id="current_status" style="position:absolute;">not Started</span>
+            <div class="col-md-3">
+              <button type="button" data-id="{{sid}}" data-name="play" class="btn btn-success" id="play" style="float:left;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i>&nbsp;Play</button>
             </div>
             <div class="col-md-6">
               <button type="button" class="btn btn-default" id="start"><i class="glyphicon glyphicon-step-backward"></i></button>
@@ -151,15 +151,34 @@
               <button type="button" class="btn btn-default" id="end"><i class="glyphicon glyphicon-step-forward"></i></button>
               <input class="range" type="range" id="range" style="display:none;" max="100" width="80%" />
             </div>
-            <div class="col-md-3">
-              <button type="button" data-id="{{sid}}" data-name="play" class="btn btn-success" id="play" style="float:right;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i></button>
-            </div>
+            <!-- <div class="col-md-3">
+
+            </div> -->
           </div>
-          <canvas id="chessboard"></canvas>
+          <div class="content_pannel">
+            <div class="col-md-3" style="font-size:.8em;text-align:left;height:100%;">
+              <p>
+                <span style="margin-left:20px;margin-top:20px;"><h3>Game Status: </h3></span>
+                <br />
+                <h3><span id="current_status" style="position:relative;margin-top:40px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;not Started</span></h3>
+                <br/>
+                <br/>
+                <h3>White：<span id="player-status1"># </span></h3>
+                <br/>
+                <h3>Black：<span id="player-status2"># </span></h3>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <canvas id="chessboard"></canvas>
+            </div>
+            <!-- <div class="col-md-3">
+
+            </div> -->
+          </div>
           <div class="footer_pannel">
-            <div class="col-md-8"><span id="player-status">White：# , Black：#</span></div>
+            <div class="col-md-8"><button type="button" name="download" id="download" class="btn btn-default" data-toggle="modal" data-target="#info-modal-box" style="color:white;background-color:#1ABC9C;">Download Chess Data</button></div>
             <div class="col-md-4" style="text-align:right;">
-              <button type="button" name="download" id="download" class="btn btn-default" data-toggle="modal" data-target="#info-modal-box" style="color:white;background-color:#1ABC9C;">Download Chess Data</button>
+
             </div>
           </div>
         </div>
