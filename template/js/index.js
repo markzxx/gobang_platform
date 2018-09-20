@@ -137,6 +137,9 @@ function rd(n, m) {
 
 // 绑定各种按键
 function bindButtonClick(socket) {
+
+  //动态设置ranklist高度
+  $(".rank_list").css("top",$(".play_chess").offset().top+"px");
   $('#play').click(function() {
     var $this = $(this);
     var status = $this.text();
