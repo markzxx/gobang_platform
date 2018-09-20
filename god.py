@@ -238,7 +238,7 @@ if __name__ == '__main__':
     black_path = os.path.join(file_dic,arg_list[3]+'.py')#'./11610999.py'
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
-    player = int(arg_list[6])
+    player = arg_list[6]
 
     start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
 

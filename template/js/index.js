@@ -130,10 +130,10 @@ function clientSocket(socket) {
           });
           $("#info-modal-box").modal("show");
       }else if(info.type == 2){
-          $("#info-modal-box-msg").html("<p>游戏异常结束," + info.info + "</p>")
+          $("#info-modal-box-msg").html("<p>游戏异常结束," + info.info + "</p>");
           $("#info-modal-box").modal("show");
       }else if(info.type == 3){
-          $("#info-modal-box-msg").html("<p> info.info </p>")
+          $("#info-modal-box-msg").html("<p>" +info.info +"</p>");
           $("#info-modal-box").modal("show");
       }
     // alert('游戏异常结束，'+info);
@@ -157,10 +157,7 @@ function bindButtonClick(socket) {
     $(".user-status").attr("disabled", "disabled");
 
     watch($this.data('id'));
-    socket.emit('play', {
-      'sid': $this.data('id'),
-      'action': $this.attr("data-name")
-    });
+    socket.emit('play', $this.data('id'));
   });
 
   $("#range_num").change(function(event) {
@@ -428,7 +425,7 @@ var Dragging = function(validateHandler) {
         diffY = 0;
         break;
     }
-  };
+  }
 
   return {
     enable: function() {
@@ -448,7 +445,7 @@ var Dragging = function(validateHandler) {
       document.removeEventListener('touchend', mouseHandler);
     }
   }
-}
+};
 
 function getDraggingDialog(e) {
   var target = e.target;

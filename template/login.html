@@ -55,7 +55,8 @@
               <input id="pwd" title="pwd" name="pwd" type="password" class="text" style="color: #000000 !important; position:absolute; z-index:100;" value="" placeholder="Password">
             </div>
             <div id="LOGIN" class="mb2"><button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted" type="submit" data-text="登录"><span>Login</span></button></div>
-            <div id="help_text"><cite>Registration is closed, contact QQ565323034 for help.</cite></div>
+              <div id="resetpwd" class="mb2"><button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted" type="button" data-text="重置密码"><span>Reset Password</span></button></div>
+            <!--<div id="help_text"><cite>Registration is closed, contact QQ565323034 for help.</cite></div>-->
           </form>
         </div>
       </div>
@@ -71,6 +72,9 @@
   </div>
   <script src="static/js/md5.js"></script>
   <script>
+      $('#resetpwd').click(function () {
+         window.location.href="resetpwd";
+      });
     function jsMd5() {
       var sid = document.getElementById("sid");
       var pwd = document.getElementById("pwd");

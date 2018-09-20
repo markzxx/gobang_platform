@@ -1,8 +1,7 @@
 import numpy as np
 import random
 import time
-
-import queue
+import os
 
 class AI(object):
     def __init__(self, chessboard_size, color, time_out):
@@ -13,13 +12,6 @@ class AI(object):
         self.candidate_list = []
         if color == -1:
             self.chessboard[self.chessboard_size//2,self.chessboard_size//2] = -1
-
-    def first_chess(self):
-        assert self.color ==-1
-        self.candidate_list.clear()
-        self.candidate_list.append((self.chessboard_size//2,self.chessboard_size//2))
-        self.chessboard[self.candidate_list[-1][0], self.candidate_list[-1][0]] = self.color
-
 
     def go(self, chessboard):
         self.candidate_list.clear()

@@ -2,43 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Reset password</title>
 </head>
 <body>
-    <form action="resetpwd" method="post" accept-charset="utf-8" >
+    <form action="resetpwd" method="post" accept-charset="utf-8"  onsubmit="return jsMd5();" >
             <center>
             <table class="login" style="border-collapse:separate; border-spacing:10px 10px;">
             <tr>
-            <td>Student Id:</td>
-            <td><input id="sid" title="sid" name="sid" type="text" value=""/></td>
+                <td>Student Id:</td>
+                <td><input id="sid" title="sid" name="sid" type="text" value=""/></td>
+                <td><input type="button" id="send" value="send verification"/></td>
             </tr>
             <tr>
-            <td>Old Password:</td>
-            <td><input id="oldpwd" title="oldpwd" name="oldpwd" type="password" value=""/></td>
+                <td>Verify Code:</td>
+                <td><input id="verify_code" title="verify_code" name="verify_code" type="text" value=""/></td>
             </tr>
              <tr>
-            <td>Password:</td>
-            <td><input id="newpwd" title="newpwd" name="newpwd" type="password" value=""/></td>
+                <td>Password:</td>
+                <td><input id="newpwd" title="newpwd" name="newpwd" type="password" value=""/></td>
             </tr>
             <tr>
-                <td colspan="2" align="right"><input type="submit" value="submit" onsubmit="return jsMd5();" /></td>
+                <td colspan="2" align="right"><input type="submit" value="submit"/></td>
             </tr>
             </table>
+                <p id="error">{{error}}</p>
             </center>
         </form>
-    <script src="lib/md5.js"> </script>
+    <script src="static/js/md5.js"> </script>
+    <script src="static/js/jquery.js"></script>
 
     <script>
+        $('#send').click(function () {
+            $.post('send_email', {'sid': $('#sid').val()}, function (data) {
+                if(data!='ok'){
+                    $('#error').text(data);
+                    $(this).removeAttr("disabled");
+                }
+            });
+            $(this).attr('disabled', 'disabled');
+        });
+
     function jsMd5(){
-        var sid = document.getElementById("sid");
-        var oldpwd = document.getElementById("oldpwd");
-        var newpwd = document.getElementById("newpwd");
-        if(oldpwd.value == "" || sid.value == "" || newpwd.value =="") {
-            alert("Student id and password should not be empty!")
+        if(!$('#sid').val() || !$('#newpwd').val() || !$('#verify_code').val()) {
+            alert("Something empty!");
             return false;
         }
-        oldpwd.value = md5(oldpwd.value);
-        newpwd.value = md5(newpwd.value);
+        $('#newpwd').val(md5($('#newpwd').val()));
         return true;
     }
 	</script>

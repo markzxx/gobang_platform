@@ -17,17 +17,17 @@ async def init_db():
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             "create table users "
-            "(sid int primary key, password varchar(32) NOT NULL, submit_time time, last_update time, update_times int default 0)"
+            "(sid varchar(12) primary key, password varchar(32) NOT NULL, submit_time time, last_update time, update_times int default 0)"
         )
         
         test_users = ['123', "456", "789", '111', '2', '222', '333', '888', '999', '12345', '11210162', '11610330', '11612110']
         for user in test_users:
-            await db.execute("insert into users values ({}, '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)".format(user, str(hashlib.md5('123'.encode()).hexdigest())))
+            await db.execute("insert into users values ('{}', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)".format(user, str(hashlib.md5('123'.encode()).hexdigest())))
         await db.commit()
         
         await db.execute(
             "create table game_log "
-            "(id INTEGER primary key autoincrement, white_sid int, black_sid int, start_time time,"
+            "(id INTEGER primary key autoincrement, white_sid varchar(12), black_sid varchar(12), start_time time,"
             "end_time time, winner int, loser int, "
             "FOREIGN KEY(white_sid) REFERENCES users(sid), FOREIGN KEY(black_sid) REFERENCES users(sid),"
             "UNIQUE(white_sid, black_sid, start_time))"
