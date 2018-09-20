@@ -210,7 +210,7 @@ canvas {
 }
 
 .about-w3, .team-w3l, .gallery, .testimonials-w3ls, .journal-w3l {
-  padding: 5em 0;
+  padding: 2em 0 15px 0;
 }
 
 .about-w3 .play_chess {
@@ -255,10 +255,10 @@ h3.tittle {
 }
 
 .upload_code {
-  position: relative;
+  text-align: center;
   width: 100%;
-  margin-top: 40px;
   margin-bottom: 0px;
+  margin-left: auto;
   font-size: 1.2em;
 }
 
@@ -293,14 +293,16 @@ h3.tittle {
 
 .rank_list {
   position: absolute;
-  right: 20px;
-  width: 330px;
-  height: 600px;
-  top: 44%;
+  /* right: 20px; */
+  /* width: 330px; */
+  /* height: 600px; */
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  box-sizing: border-box;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 1em !important;
 }
 
 .rank_list .rank-1 p {
@@ -1265,7 +1267,7 @@ p.jour-link a:hover {
     width: 33.3%;
   }
   .about-w3, .team-w3l, .gallery, .testimonials-w3ls, .journal-w3l, .count-agileits, .services {
-    padding: 4em 0;
+    padding: 2em 0;
   }
   .ser-grid {
     float: left;

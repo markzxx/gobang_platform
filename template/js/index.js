@@ -7,14 +7,6 @@ var IS_GAME_OVER = false; // 游戏是否结束
 var IS_CAN_STEP = false; // 是否可以下棋（对手下棋时己方不能下棋）
 var COMPETITOR_NAME = ''; // 对手的昵称
 var range_max = 0;
-var Page = {
-  each_num: 15,
-  items_num: 0,
-  page_num: 0,
-  items: [],
-  now_page: 0, //Where are you.
-  page_html: ""
-}
 // 设置canvas的content的
 var ctx = null;
 
@@ -141,7 +133,7 @@ function clientSocket(socket) {
           $("#info-modal-box-msg").html("<p>游戏异常结束," + info.info + "</p>")
           $("#info-modal-box").modal("show");
       }else if(info.type == 3){
-          $("#info-modal-box-msg").html("<p> info.info "</p>")
+          $("#info-modal-box-msg").html("<p> info.info </p>")
           $("#info-modal-box").modal("show");
       }
     // alert('游戏异常结束，'+info);
@@ -157,7 +149,7 @@ function rd(n, m) {
 function bindButtonClick(socket) {
 
   //动态设置ranklist高度
-  $(".rank_list").css("top",$(".play_chess").offset().top+"px");
+  // $(".rank_list").css("top",$(".play_chess").offset().top+"px");
   $('#play').click(function() {
     var $this = $(this);
     var status = $this.text();
@@ -252,34 +244,34 @@ function watch(sid) {
   $('#watch_id').data('id', sid);
   socket.emit('watch', sid);
 }
-// change userlist pages
-function change_page(id) {
-  Page.now_page = id;
-  Page.page_html = "";
-  var user_rank_html = '<tr class="warning"><th colspan=4 style="text-align:center;cursor:move">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
-  let page_active = "";
-  for (var i = 0; i < Page.page_num; i++) {
-    if (i == Page.now_page) {
-      page_active = "page_active";
-    } else {
-      page_active = "";
-    }
-    Page.page_html += "<button class='btn btn-default btn-sm " + page_active + "' onclick='change_page(" + i + ")'>" + (parseInt(i) + 1) + "</button>";
-  }
-  for (var index = Page.now_page * Page.each_num; index < (((Page.now_page + 1) * Page.each_num) > Page.items_num ? Page.items_num : (Page.now_page + 1) * Page.each_num); index++) {
-    user_rank_html += Page.items[index];
-  }
-  user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'><td colspan='4'>" +
-    // "<button class='btn btn-info btn-sm' id='page-left'><i class='glyphicon glyphicon-arrow-left'></i></button>"+
-    Page.page_html +
-    // "<button class='btn btn-info btn-sm' id='page-right'><i class='glyphicon glyphicon-arrow-right'></i></button>"+
-    "</td></tr>";
-  $('#rank_table').html(user_rank_html);
-  $('.user-status').click(function(e) {
-    watch($(this).attr('id'));
-  });
-  $('#' + $('#watch_id').data('id')).addClass('gaming-status');
-}
+// RankList分页实现
+// function change_page(id) {
+//   Page.now_page = id;
+//   Page.page_html = "";
+//   var user_rank_html = '<tr class="warning"><th colspan=4 style="text-align:center;cursor:move">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
+//   let page_active = "";
+//   for (var i = 0; i < Page.page_num; i++) {
+//     if (i == Page.now_page) {
+//       page_active = "page_active";
+//     } else {
+//       page_active = "";
+//     }
+//     Page.page_html += "<button class='btn btn-default btn-sm " + page_active + "' onclick='change_page(" + i + ")'>" + (parseInt(i) + 1) + "</button>";
+//   }
+//   for (var index = Page.now_page * Page.each_num; index < (((Page.now_page + 1) * Page.each_num) > Page.items_num ? Page.items_num : (Page.now_page + 1) * Page.each_num); index++) {
+//     user_rank_html += Page.items[index];
+//   }
+//   user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'><td colspan='4'>" +
+//     // "<button class='btn btn-info btn-sm' id='page-left'><i class='glyphicon glyphicon-arrow-left'></i></button>"+
+//     Page.page_html +
+//     // "<button class='btn btn-info btn-sm' id='page-right'><i class='glyphicon glyphicon-arrow-right'></i></button>"+
+//     "</td></tr>";
+//   $('#rank_table').html(user_rank_html);
+//   $('.user-status').click(function(e) {
+//     watch($(this).attr('id'));
+//   });
+//   $('#' + $('#watch_id').data('id')).addClass('gaming-status');
+// }
 // // 加载在线用户列表
 // function handlebarsUserList(userList) {
 //   console.log(userList);
@@ -345,8 +337,8 @@ function handlebarsUserList(userList) {
   var now_sid = parseInt($("#sid").attr("data-id"));
   let now_rank=11;
   let now_score=0;
-  var user_rank_html = '<tr class="warning"><th colspan=4 style="text-align:center;cursor:move">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
-  let state = "active";
+  var user_rank_html = '<tr><th colspan=4 style="text-align:center;cursor:default">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
+  let state = "";
 
   let value;
   for (var index = 0; index < userList.length; index++) {
@@ -358,7 +350,7 @@ function handlebarsUserList(userList) {
         now_score=value.score;
       }
       user_rank_html+='<tr class="' + state + ' rank-'+(index+1)+'"><td><p class="user-rank">' + (index + 1) + '</p></td><td><p class="user-id">' + value.sid + '</p></td>' + '<td><p class="user-score">' + value.score + '</p></td>' + '<td><button class="label user-status" id="' + value.sid + '" >watch</button></td></tr>';
-      state="active";
+      state="";
     }else{
         if(now_sid==value.sid){
           now_rank=index+1;
