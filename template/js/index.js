@@ -82,7 +82,7 @@ function drawNewPiece(i, j, isBlack) {
 function clientSocket(socket) {
   socket.on('reply', function(data) {
     console.log(data);
-    // alert(data);
+    alert(data);
   });
 
   socket.on('update_list', function(userList) {
@@ -123,9 +123,27 @@ function clientSocket(socket) {
       setGameStatus('Game finished, ' + winner + ' WIN！');
   });
 
+  socket.on('error_finish', function(winner) {
+    $('#play').removeAttr("disabled");
+    $('.range').removeAttr("disabled");
+    setGameStatus('Game error finished!');
+  });
+
   socket.on('error', function(info) {
-    $("#info-modal-box-msg").html("<p>游戏异常结束," + info + "</p>")
-    $("#info-modal-box").modal("show");
+      if(info.type == 1){
+          $("#info-modal-box-msg").html("<p>Error, " + info.info + "</p><button type=\"button\" id=\"error_finish\">Click here to force finish.</button>");
+          $('#error_finish').click(function() {
+              socket.emit('error_finish', $('#sid').data('id'));
+              $("#info-modal-box").modal("hide");
+          });
+          $("#info-modal-box").modal("show");
+      }else if(info.type == 2){
+          $("#info-modal-box-msg").html("<p>游戏异常结束," + info.info + "</p>")
+          $("#info-modal-box").modal("show");
+      }else if(info.type == 3){
+          $("#info-modal-box-msg").html("<p> info.info "</p>")
+          $("#info-modal-box").modal("show");
+      }
     // alert('游戏异常结束，'+info);
   });
 }

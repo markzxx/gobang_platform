@@ -32,14 +32,14 @@ class Http_handler:
             del session['sid']
         return aiohttp_jinja2.render_template('login.html', request, {})
         
-    @aiohttp_jinja2.template('login')
+    # @aiohttp_jinja2.template('login.html')
     async def login(self, request):
         if request._method == "GET":
             return aiohttp_jinja2.render_template('login.html', request, {})
             
         data = await request.post()
         if not data['sid'].isdigit():
-            raise self.redirect(request.app.router, 'login')
+            return aiohttp_jinja2.render_template('login.html', request, {'message':"username should be number"})
         session = await get_session(request)
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute('SELECT * FROM users where sid={}'.format(int(data['sid'])))
@@ -52,8 +52,9 @@ class Http_handler:
             # elif not row:
             #     await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
             #     await db.commit()
-        session['sid'] = data['sid']
-        raise self.redirect(request.app.router, 'index')
+            else:
+                session['sid'] = data['sid']
+                raise self.redirect(request.app.router, 'index')
         
     @aiohttp_jinja2.template('resetjump')
     async def resetjump(self, request):
@@ -189,18 +190,18 @@ async def message(soid, data):
 @sio.on('play')
 async def play(soid, data):
     if data['sid'] in players:
-        await sio.emit('reply', "You are in an unfinished game", soid)
+        await sio.emit('error', {'type':1, 'info':"You are in an unfinished game."}, soid)
     else:
         idx = find_rank(data['sid'])
         if idx == -1:
-            await sio.emit('reply', "You have not uploaded user_code.", room=soid)
+            await sio.emit('error', {'type': 3, 'info': "You have not uploaded user_code."}, soid)
             return
         elif idx == 0:
             player2 = data['sid']
         else:
             player2 = rank_info[idx-1]['sid']
         player1 = data['sid']
-        if random.random()>0.5:
+        if random.random() > 0.5:
             await begin(player1, player1, player2)
         else:
             await begin(player1, player2, player1)
@@ -217,24 +218,38 @@ async def begin(player1, white, black):
 @sio.on('go')
 async def go(soid, data):
     # print("go", data)
-    game_id = players[data[0]]
-    games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4], int(time.time())))
-    await sio.emit('go', data[2:], room=data[0])
+    if data[0] in players:
+        game_id = players[data[0]]
+        games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4], int(time.time())))
+        await sio.emit('go', data[2:], room=data[0])
 
 @sio.on('finish')
 async def finish(soid, data):
-    game_id = players[data[0]]
-    await update_game_log(game_id, data[4], data[5])
-    await update_chess_log(game_id)
-    await update_all_list()
-    del games[game_id]
-    del players[data[0]]
-    await sio.emit('finish', data[4], room=data[0])
-    time.sleep(0.2)
+    if data[0] in players:
+        game_id = players[data[0]]
+        await update_game_log(game_id, data[4], data[5])
+        await update_chess_log(game_id)
+        await update_all_list()
+        del games[game_id]
+        del players[data[0]]
+        await sio.emit('finish', data[4], room=data[0])
+        time.sleep(0.2)
+        
+@sio.on('error_finish')
+async def error_finish(soid, player):
+    if player in players:
+        game_id = players[player]
+        await update_game_log(game_id, 0, 0)
+        # await update_chess_log(game_id)
+        # await update_all_list()
+        del games[game_id]
+        del players[player]
+        await sio.emit('error_finish', 0, room=player)
+        time.sleep(0.2)
 
 @sio.on('error')
-async def finish(soid, data):
-    await sio.emit('error', data[2], room=data[0])
+async def error(soid, data):
+    await sio.emit('error', {'type':2,'info':data[2]}, room=data[0])
 
 @sio.on('test_go')
 async def go(soid, data):
