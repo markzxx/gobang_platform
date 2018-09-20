@@ -7,6 +7,7 @@ import resource
 import traceback
 import timeout_decorator
 from socketIO_client import SocketIO, BaseNamespace
+import os
 
 class Namespace(BaseNamespace):
     def on_connect(selpif):
@@ -66,7 +67,7 @@ def check_chess_board(chessboard,chessboard_size,pos,color):
     return result, winner
 
 class God(object):
-    def __init__(self, white_path, black_path, chessboard_size, time_out):
+    def __init__(self, white_path, black_path, chessboard_size, time_out, start_time):
 
         self.chessboard_size = chessboard_size
         self.time_out = time_out
@@ -175,31 +176,8 @@ class God(object):
             self.winner = self.user_color_map[winner_play]
 
 
-#def fight(color_map,white_path, black_path, size, time_interval,player, start_time):
-
-if __name__ == '__main__':
-    def deal_go_data(go_data):
-        for i in range(2,5):
-            go_data[i] = int(go_data[i])
-        return go_data
-
-    socketIO = SocketIO('localhost', 8080, Namespace)
-
-
-    arg_list = sys.argv
-    color_map = {-1:1, 1:0}
-    file_dic = arg_list[1]
-    white_path = file_dic+'/'+arg_list[2]+'.py'#'./11610999.py'
-    black_path = file_dic+'/'+arg_list[3]+'.py'#'./11610999.py'
-    size = int(arg_list[4])
-    time_interval = float(arg_list[5])
-    player = int(arg_list[6])
-
-
-    memory_size = 10*1024**2 # In bytes
-    limit_memory(memory_size)
-
-    god = God(white_path, black_path, size, time_interval)
+def fight(color_map,white_path, black_path, size, time_interval,player, start_time):
+    god = God(white_path, black_path, size, time_interval, start_time)
 
     #begin_data = god.begin
     begin_data = (player,0)
@@ -242,7 +220,46 @@ if __name__ == '__main__':
                    god.color_user_map[-god.winner])
     socketIO.emit("finish", finish_data)
 
+
+
+if __name__ == '__main__':
+    def deal_go_data(go_data):
+        for i in range(2,5):
+            go_data[i] = int(go_data[i])
+        return go_data
+
+    socketIO = SocketIO('localhost', 8080, Namespace)
+
+
+    arg_list = sys.argv
+    color_map = {-1:1, 1:0}
+    file_dic = arg_list[1]
+    white_path = os.path.join(file_dic, arg_list[2]+'.py')#'./11610999.py'
+    black_path = os.path.join(file_dic,arg_list[3]+'.py')#'./11610999.py'
+    size = int(arg_list[4])
+    time_interval = float(arg_list[5])
+    player = int(arg_list[6])
+
+    start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+
+
+    memory_size = 10*1024**2 # In bytes
+    limit_memory(memory_size)
+
+    try:
+        fight(color_map, white_path, black_path, size, time_interval, player, start_time)
+
+    except Exception:
+        socketIO.emit("error", traceback.format_exc())
+        end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        finish_data = (player, 0, start_time, end_time, 0, 0)
+        socketIO.emit("finish", finish_data)
+
+
     time.sleep(1)
+
+
+
 
 
 
