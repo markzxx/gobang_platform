@@ -116,8 +116,6 @@ function clientSocket(socket) {
   });
 
   socket.on('finish', function(winner) {
-    $('#play').removeAttr("disabled");
-    $('.range').removeAttr("disabled");
     $('#range').attr('max', chess_log.length);
     $('#range').val(chess_log.length);
     $('#range_num').val(chess_log.length);
@@ -130,9 +128,9 @@ function clientSocket(socket) {
   });
 
   socket.on('error_finish', function(winner) {
-    $('#play').removeAttr("disabled");
-    $('.range').removeAttr("disabled");
+    drawChessBoard();
     setGameStatus('Game error finished!');
+    stopSelfPlay();
   });
 
   socket.on('error', function(info) {
@@ -202,6 +200,7 @@ function bindButtonClick(socket) {
         socket.emit('self_play', {'player': $this.data('id'), 'color': AI_color});
     }else{
         stopSelfPlay();
+        drawChessBoard();
     }
   });
 
