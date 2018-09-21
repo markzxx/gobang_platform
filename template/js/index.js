@@ -19,9 +19,6 @@ var chess_log = null;
 $(document).ready(function() {
   clientSocket(socket);
   socket.emit('update_list', "update");
-  // setInterval(function(){
-  //   socket.emit('update_list', "update");
-  // },3000);
   bindButtonClick(socket);
   drawChessBoard();
 });
@@ -51,6 +48,19 @@ function drawChessBoard() {
   }
 }
 
+// 画出棋子
+function drawPiece(i, j) {
+    // 当前游戏未结束且当前节点未落子
+    if (IS_CAN_STEP && !IS_GAME_OVER && arrPieces[i][j] === 0) {
+        // 画一个新棋子
+        drawNewPiece(i, j, IS_BLACK);
+        color = IS_BLACK?-1:1;
+        chess_log.push([i,j,color]);
+        socket.emit('self_go', [$('#sid').data('id'), i, j, color]);
+    }
+}
+
+//画一个棋子
 function drawNewPiece(i, j, isBlack) {
   var x = CHESSBOARD_MARGIN + i * CHESSBOARD_GRID + 1;
   var y = CHESSBOARD_MARGIN + j * CHESSBOARD_GRID + 1;
@@ -67,6 +77,9 @@ function drawNewPiece(i, j, isBlack) {
   }
   ctx.fillStyle = grd;
   ctx.fill();
+
+  // 记录坐标落子情况
+    arrPieces[i][j] = isBlack ? -1 : 1;
 }
 
 
@@ -85,7 +98,7 @@ function clientSocket(socket) {
     drawChessBoard();
     chess_log = new Array();
     $.each(gameInfo.chess_log, function(index, value) {
-      drawNewPiece(value[1], value[2], value[3]);
+      drawNewPiece(value[1], value[2], value[3]==-1);
       chess_log.push(value);
     });
     // var status = 'White：' + gameInfo.white + '\t\t\t , Black：' + gameInfo.black;
@@ -98,7 +111,7 @@ function clientSocket(socket) {
 
   socket.on('go', function(info) {
     // console.log(info);
-    drawNewPiece(info[0], info[1], info[2]);
+    drawNewPiece(info[0], info[1], info[2]==-1);
     chess_log.push(info);
   });
 
@@ -113,6 +126,7 @@ function clientSocket(socket) {
       setGameStatus('Game draw!');
     else
       setGameStatus('Game finished, ' + winner + ' WIN！');
+    stopSelfPlay();
   });
 
   socket.on('error_finish', function(winner) {
@@ -145,19 +159,50 @@ function rd(n, m) {
   return Math.floor(Math.random() * c + n);
 }
 
+function stopSelfPlay(){
+    $('#self_play').data('name','play');
+    $('#self_play').text('SelfPlay');
+    $('#play').removeAttr("disabled");
+    $('.range').removeAttr("disabled");
+    IS_CAN_STEP = false;
+}
+
 // 绑定各种按键
 function bindButtonClick(socket) {
+    //绑定棋盘落子
+    $('#chessboard').click(function (e) {
+        var x = Math.floor(e.offsetX / CHESSBOARD_GRID);
+        var y = Math.floor(e.offsetY / CHESSBOARD_GRID);
+        drawPiece(x, y);
+    });
 
   //动态设置ranklist高度
   // $(".rank_list").css("top",$(".play_chess").offset().top+"px");
   $('#play').click(function() {
     var $this = $(this);
-    var status = $this.text();
     $this.attr("disabled", "disabled");
     $(".user-status").attr("disabled", "disabled");
 
     watch($this.data('id'));
     socket.emit('play', $this.data('id'));
+  });
+
+  //开始人机对战
+   $('#self_play').click(function() {
+    var $this = $(this);
+    var status = $this.data('name');
+    if(status == 'play'){
+        $this.data('name', 'stop');
+        $this.text('Stop');
+        $(".user-status").attr("disabled", "disabled");
+        IS_BLACK = Math.random()>0.5;
+        IS_CAN_STEP = true;
+        var AI_color = IS_BLACK ? 1 : -1;
+        watch($this.data('id'));
+        socket.emit('self_play', {'player': $this.data('id'), 'color': AI_color});
+    }else{
+        stopSelfPlay();
+    }
   });
 
   $("#range_num").change(function(event) {
@@ -171,6 +216,7 @@ function bindButtonClick(socket) {
     $('#range_num').val(0).change();
     $('#range').val(0).change();
   });
+
   $('#left').click(function() {
     if (parseInt($('#range_num').val()) - 1 >= 0) {
       $('#range_num').val(parseInt($('#range_num').val()) - 1);
@@ -209,7 +255,7 @@ function bindButtonClick(socket) {
   $('#range').change(function() {
     drawChessBoard();
     for (var i = 0; i < parseInt($('#range').val()); i++)
-      drawNewPiece(chess_log[i][0], chess_log[i][1], chess_log[i][2]);
+      drawNewPiece(chess_log[i][0], chess_log[i][1], chess_log[i][2]==-1);
   });
 
   $('#download').click(function() {

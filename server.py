@@ -184,6 +184,10 @@ async def update_chess_log (game_id):
 async def connect(soid, environ):
     print("connect ", soid)
 
+@sio.on('message')
+async def message (soid, msg):
+    print(soid, "msg ", msg)
+
 async def push_game(player, soid=None):
     if player in players:
         await sio.emit('push_game', games[players[player]], room=soid if soid else player)
@@ -196,6 +200,60 @@ async def message(soid, room):
     sio.enter_room(soid, room)
     await push_game(room, soid)
 
+@sio.on('self_play')
+async def self_play(soid, data):
+    player = str(data['player'])
+    color = int(data['color'])
+    print(player, 'self_play')
+    if player in players:
+        await sio.emit('error', {'type': 1, 'info': "You are in an unfinished game."}, soid)
+    else:
+        idx = find_rank(player)
+        if idx == -1:
+            await sio.emit('error', {'type': 3, 'info': "You have not uploaded user_code."}, soid)
+            return
+        if color == 1:
+            await self_begin(player, player, 'human')
+        else:
+            await self_begin(player, 'human', player)
+
+async def self_begin(player, white, black):
+    game_id = 0
+    while game_id in games:
+        game_id = random.randint(1000000, 10000000)
+    print("self_begin", white, black, game_id)
+    players[player] = game_id
+    games[game_id] = {'white': white, 'black': black, "chess_log": []}
+    await push_game(player)
+    os.popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player))
+    
+@sio.on('self_register')
+async def self_register(soid, player):
+    print('register',player,soid)
+    player = str(player)
+    if player in players:
+        game_id = players[player]
+        games[game_id]['god'] = soid
+
+@sio.on('self_go')
+async def self_go(soid, data):  #data[player1, x, y, color]
+    player = str(data[0])
+    if player in players:
+        print(data)
+        game_id = players[player]
+        games[game_id]['chess_log'].append((game_id, data[1], data[2], data[3], int(time.time())))
+        god = games[game_id]['god']
+        await sio.emit('self_go', data[1:], god)
+
+@sio.on('self_finish')
+async def self_finish (soid, data):
+    if data[0] in players:
+        game_id = players[data[0]]
+        del games[game_id]
+        del players[data[0]]
+        await sio.emit('finish', data[1], room=data[0])
+        time.sleep(0.2)
+        
 @sio.on('play')
 async def play(soid, player):
     player = str(player)
@@ -227,23 +285,23 @@ async def begin(player1, white, black):
     os.popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player1))
 
 @sio.on('go')
-async def go(soid, data):
+async def go(soid, data):  #data[player1, 0, x, y, color]
     # print("go", data)
     if data[0] in players:
         game_id = players[data[0]]
-        games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4], int(time.time())))
-        await sio.emit('go', data[2:], room=data[0])
-
+        games[game_id]['chess_log'].append((game_id, data[1], data[2], data[3], int(time.time())))
+        await sio.emit('go', data[1:], room=data[0])
+        
 @sio.on('finish')
 async def finish(soid, data):
     if data[0] in players:
         game_id = players[data[0]]
-        await update_game_log(game_id, data[4], data[5])
+        await update_game_log(game_id, data[1], data[2])
         await update_chess_log(game_id)
         await update_all_list()
         del games[game_id]
         del players[data[0]]
-        await sio.emit('finish', data[4], room=data[0])
+        await sio.emit('finish', data[1], room=data[0])
         time.sleep(0.2)
         
 @sio.on('error_finish')
@@ -261,7 +319,7 @@ async def error_finish(soid, player):
 
 @sio.on('error')
 async def error(soid, data):
-    await sio.emit('error', {'type': 2,'info': data[2]}, room=data[0])
+    await sio.emit('error', {'type': 2,'info': data[1]}, room=data[0])
 
 @sio.on('test_go')
 async def go(soid, data):

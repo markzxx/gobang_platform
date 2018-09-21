@@ -12,10 +12,22 @@ import os
 class Namespace(BaseNamespace):
     def on_connect(selpif):
         print ('[Connected]')
-
-    def on_reply (selpif, data):
-        for d in data:
-            print(d)
+        
+    def on_self_go (selpif, data):
+        god.self_update(data[0], data[1], data[2])
+        if not god.finish:
+            god.update(-data[2])
+            if not god.error:
+                go_data = [god.player, god.last_pos[0], god.last_pos[1], -data[2]]
+                socketIO.emit("go", deal_go_data(go_data))
+        if god.finish:
+            if god.error:
+                error_data = (god.player, god.error)
+                socketIO.emit("error", error_data)
+            finish_data = (god.player, god.color_user_map[god.winner], god.color_user_map[-god.winner])
+            socketIO.emit("self_finish", finish_data)
+            socketIO.wait(seconds=1)
+            socketIO.disconnect()
 
 def limit_memory(maxsize):
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
@@ -67,21 +79,23 @@ def check_chess_board(chessboard,chessboard_size,pos,color):
     return result, winner
 
 class God(object):
-    def __init__(self, white_path, black_path, chessboard_size, time_out, start_time):
+    def __init__(self, file_dic, player, white, black, chessboard_size, time_out):
 
         self.chessboard_size = chessboard_size
         self.time_out = time_out
         self.chessboard = np.zeros((chessboard_size, chessboard_size), dtype=np.int)
         self.finish = False
         self.winner = 0
-        self.last_pos = (-1,-1)
-        self.white = imp.load_source('AI', white_path).AI(self.chessboard_size, 1, self.time_out)
-        self.black = imp.load_source('AI', black_path).AI(self.chessboard_size, -1, self.time_out)
-        self.user_color_map = {white_path.split("/")[-1].split(".")[0]: 1, black_path.split("/")[-1].split(".")[0]: -1}
-        self.color_user_map = {1: int(white_path.split("/")[-1].split(".")[0]), -1: int(black_path.split("/")[-1].split(".")[0]), 0: 0}
-        self.start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-        self.end_time = -1
-        self.begin = (self.color_user_map[1], self.color_user_map[-1])
+        self.last_pos = (-1, -1)
+        self.player = player
+        white_path = os.path.join(file_dic, white + '.py')
+        black_path = os.path.join(file_dic, black + '.py')
+        if white != 'human':
+            self.white = imp.load_source('AI', white_path).AI(self.chessboard_size, 1, self.time_out)
+        if black != 'human':
+            self.black = imp.load_source('AI', black_path).AI(self.chessboard_size, -1, self.time_out)
+        self.user_color_map = {white: 1, black: -1}
+        self.color_user_map = {1: white, -1: black, 0: 0}
         self.error = ""
 
 
@@ -96,13 +110,19 @@ class God(object):
             self.finish = True
             return True
 
-
+    def self_update(self, x, y, color):
+        pos = (x, y)
+        self.last_pos = pos
+        assert self.chessboard[pos[0], pos[1]] == 0
+        self.chessboard[pos[0], pos[1]] = color
+        self.finish = self.judge(pos, color)
+        if god.finish:
+            self.winner = color
+            
     def update(self, color):
         assert self.chessboard.all()<2 and self.chessboard.all()>-2
-        pos = (-1,-1)
-        tem_list = []
 
-        if color ==1:
+        if color == 1:
             try:
                 timeout(self.time_out)(self.white.go)(self.chessboard)#timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
             except MemoryError:
@@ -175,88 +195,99 @@ class God(object):
             self.error += " Dear " + wrong_play + ": Memory out"
             self.winner = self.user_color_map[winner_play]
 
+def self_fight(file_dic, white, black, size, time_interval, player):
+    global god
+    god = God(file_dic, player, white, black, size, time_interval)
 
-def fight(color_map,white_path, black_path, size, time_interval,player, start_time):
-    god = God(white_path, black_path, size, time_interval, start_time)
+    begin_data = player
+    
+    AI_color = 1 if white != 'human' else -1
+    socketIO.emit("self_register", player)
+    
+    if AI_color == -1:
+        #Black chess go first step
+        god.update(AI_color)
+        if not god.finish:
+            go_data = [begin_data, god.last_pos[0], god.last_pos[1], AI_color]
+            socketIO.emit("go", deal_go_data(go_data))
+    
+    if god.error:
+        error_data = (begin_data, god.error)
+        socketIO.emit("error", error_data)
+        finish_data = (begin_data, god.color_user_map[god.winner], god.color_user_map[-god.winner])
+        socketIO.emit("finish", finish_data)
+        # print(error_data)
+        
+
+def fight(file_dic, white, black, size, time_interval, player):
+    god = God(file_dic, player, white, black, size, time_interval)
 
     #begin_data = god.begin
-    begin_data = (player,0)
-    go_data = [begin_data[0], begin_data[1], -1, -1, 0]
+    begin_data = player
 
     tem_color = -1
     while not god.finish:
         tem_color = -1
         god.update(color=tem_color)
         if god.finish: break
-        go_data[2] = god.last_pos[0]
-        go_data[3] = god.last_pos[1]
-        go_data[4] = color_map[tem_color]
+        go_data = [begin_data, god.last_pos[0], god.last_pos[1], tem_color]
         socketIO.emit("go", deal_go_data(go_data))
         #print(go_data)
 
         tem_color = 1
         god.update(color=tem_color)
         if god.finish: break
-        go_data[2] = god.last_pos[0]
-        go_data[3] = god.last_pos[1]
-        go_data[4] = color_map[tem_color]
+        go_data = [begin_data, god.last_pos[0], god.last_pos[1], tem_color]
         socketIO.emit("go", deal_go_data(go_data))
         #print(go_data)
 
-    god.end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     if god.error:
-        error_data = (begin_data[0], begin_data[1], god.error)
+        error_data = (begin_data, god.error)
         socketIO.emit("error", error_data)
         #print(error_data)
     else:
-        go_data[2] = god.last_pos[0]
-        go_data[3] = god.last_pos[1]
-        go_data[4] = color_map[tem_color]
+        go_data = [begin_data, god.last_pos[0], god.last_pos[1], tem_color]
         #print(go_data)
-
         socketIO.emit("go", deal_go_data(go_data))
 
-    finish_data = (begin_data[0], begin_data[1], god.start_time, god.end_time, god.color_user_map[god.winner],
-                   god.color_user_map[-god.winner])
+    finish_data = (begin_data, god.color_user_map[god.winner], god.color_user_map[-god.winner])
     socketIO.emit("finish", finish_data)
 
 
 
 if __name__ == '__main__':
     def deal_go_data(go_data):
-        for i in range(2,5):
+        for i in range(1,4):
             go_data[i] = int(go_data[i])
         return go_data
 
     socketIO = SocketIO('localhost', 8080, Namespace)
 
-
     arg_list = sys.argv
-    color_map = {-1:1, 1:0}
     file_dic = arg_list[1]
-    white_path = os.path.join(file_dic, arg_list[2]+'.py')#'./11610999.py'
-    black_path = os.path.join(file_dic,arg_list[3]+'.py')#'./11610999.py'
+    white = arg_list[2]
+    black = arg_list[3]
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
     player = arg_list[6]
 
     start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-
-
+    
     memory_size = 10*1024**2 # In bytes
     limit_memory(memory_size)
 
     try:
-        fight(color_map, white_path, black_path, size, time_interval, player, start_time)
+        if white == 'human' or black == 'human':
+            self_fight(file_dic, white, black, size, time_interval, player)
+        else:
+            fight(file_dic, white, black, size, time_interval, player)
 
     except Exception:
-        socketIO.emit("error", traceback.format_exc())
-        end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-        finish_data = (player, 0, start_time, end_time, 0, 0)
+        socketIO.emit("error", [player, traceback.format_exc()])
+        finish_data = (player, 0, 0)
         socketIO.emit("finish", finish_data)
 
-
-    time.sleep(1)
+    socketIO.wait(seconds=200)
 
 
 
