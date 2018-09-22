@@ -9,6 +9,83 @@ import timeout_decorator
 from socketIO_client import SocketIO, BaseNamespace
 import os
 
+import psutil
+import threading
+import inspect
+import ctypes
+
+
+global memory_size
+global fight_thread
+global player_memory
+global finish_data
+global player
+global fight_thread
+global god
+
+
+player_memory = {1:0,-1:0}
+
+def get_mem():
+    return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
+
+def _async_raise(tid, exctype):
+    """raises the exception, performs cleanup if needed"""
+    tid = ctypes.c_long(tid)
+    if not inspect.isclass(exctype):
+        exctype = type(exctype)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def stop_thread(thread):
+    _async_raise(thread.ident, SystemExit)
+    white_mem = player_memory[1]
+    black_mem = player_memory[-1]
+    winner = 0
+    failer = 0
+    memory_message = ''
+    if white_mem<black_mem:
+        winner = god.color_user_map[1]
+        failer = god.color_user_map[-1]
+        memory_message = 'Dear '+str(god.color_user_map[-1])+": You may get memory out with more than "+str(black_mem)+" MB.\n Your competitor" +str(god.color_user_map[1])+ " use "+str(white_mem)+" MB."
+        #print("winner: ",god.color_user_map[1])
+    elif white_mem>black_mem:
+        winner = god.color_user_map[-1]
+        failer = god.color_user_map[1]
+        memory_message = 'Dear '+str(god.color_user_map[1])+": You may get memory out with more than "+str(white_mem)+" MB.\n Your competitor" + str(god.color_user_map[-1])+" use "+ str(black_mem)+" MB."
+        #print("winner: ",god.color_user_map[-1])
+    else:
+        memory_message = 'Dear '+str(god.color_user_map[1])+" and "+str(god.color_user_map[-1])+": You may get memory out together."+"\n "+str(god.color_user_map[1])+" use "+str(white_mem)+" MB.\n "+str(god.color_user_map[-1])+" use "+ str(black_mem)+" MB."
+        #print("winner: ",god.color_user_map[0])
+
+    finish_data=(player, int(winner), int(failer))
+    socketIO.emit("error",[player,memory_message] )
+    socketIO.emit("finish", finish_data)
+    #print(god.color_user_map[1]," size is ", white_mem)
+    #print(god.color_user_map[-1]," size is ", black_mem)
+
+def control():
+    judge = True
+    while fight_thread.is_alive() and judge:
+        size = psutil.Process(os.getpid()).memory_info().rss
+        print(size/(1024**2))
+        print('----------------')
+        if size > memory_size:
+
+            try:
+                stop_thread(fight_thread)
+
+            except ValueError:
+                judge = False
+
+
 class Namespace(BaseNamespace):
     def on_connect(selpif):
         print ('[Connected]')
@@ -29,9 +106,6 @@ class Namespace(BaseNamespace):
             socketIO.wait(seconds=1)
             socketIO.disconnect()
 
-def limit_memory(maxsize):
-    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-    resource.setrlimit(resource.RLIMIT_AS, (maxsize, hard))
 
 def check_chess_board(chessboard,chessboard_size,pos,color):
     winner = 0
@@ -196,8 +270,8 @@ class God(object):
             self.winner = self.user_color_map[winner_play]
 
 def self_fight(file_dic, white, black, size, time_interval, player):
-    global god
-    god = God(file_dic, player, white, black, size, time_interval)
+
+
 
     begin_data = player
     
@@ -220,22 +294,39 @@ def self_fight(file_dic, white, black, size, time_interval, player):
         
 
 def fight(file_dic, white, black, size, time_interval, player):
-    god = God(file_dic, player, white, black, size, time_interval)
 
     #begin_data = god.begin
     begin_data = player
 
     tem_color = -1
     while not god.finish:
+        #--------------------------------
+        time.sleep(0.0001)
         tem_color = -1
+        memory_usage = get_mem()
+        tem_mem = player_memory[tem_color]
+
         god.update(color=tem_color)
+
+        after_step_memory = get_mem()
+        player_memory[tem_color] = tem_mem + after_step_memory - memory_usage
+
         if god.finish: break
         go_data = [begin_data, god.last_pos[0], god.last_pos[1], tem_color]
         socketIO.emit("go", deal_go_data(go_data))
         #print(go_data)
 
+        #--------------------------------
+        time.sleep(0.0001)
         tem_color = 1
+        memory_usage = get_mem()
+        tem_mem = player_memory[tem_color]
+
         god.update(color=tem_color)
+
+        after_step_memory = get_mem()
+        player_memory[tem_color] = tem_mem + after_step_memory - memory_usage
+
         if god.finish: break
         go_data = [begin_data, god.last_pos[0], god.last_pos[1], tem_color]
         socketIO.emit("go", deal_go_data(go_data))
@@ -273,14 +364,22 @@ if __name__ == '__main__':
 
     start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     
-    memory_size = 10*1024**2 # In bytes
-    limit_memory(memory_size)
+    memory_size = 40*1024**2 # In bytes
+    god = God(file_dic, player, white, black, size, time_interval)
 
     try:
         if white == 'human' or black == 'human':
+            #fight_thread=threading.Thread(target=self_fight,args=[file_dic, white, black, size, time_interval, player])
             self_fight(file_dic, white, black, size, time_interval, player)
         else:
-            fight(file_dic, white, black, size, time_interval, player)
+            fight_thread=threading.Thread(target=fight,args=[file_dic, white, black, size, time_interval, player])
+            control_thread = threading.Thread(target=control)
+
+            fight_thread.start()
+            control_thread.start()
+            fight_thread.join()
+            control_thread.join()
+
 
     except Exception:
         socketIO.emit("error", [player, traceback.format_exc()])
