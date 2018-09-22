@@ -46,7 +46,7 @@ class Http_handler:
             if row and row[1] != data['pwd']:
                 return aiohttp_jinja2.render_template('login.html', request, {'error': "Password wrong"})
             elif not row:
-                return aiohttp_jinja2.render_template('login.html', request, {'error': "StudentId not exist"})
+                return aiohttp_jinja2.render_template('login.html', request, {'error': "Student Id not exist"})
             # elif not row:
             #     await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
             #     await db.commit()
@@ -104,7 +104,8 @@ class Http_handler:
                     break
                 size += len(chunk)
                 f.write(chunk)
-                
+                if size > 1024**2:
+                    return aiohttp_jinja2.render_template('index.html', request, {'sid': sid, 'error': "Your code can not excess 1M."})
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(sid))
             row = await cursor.fetchone()
