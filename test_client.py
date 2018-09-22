@@ -4,9 +4,12 @@ class Namespace(BaseNamespace):
     def on_connect(selpif):
         print ('[Connected]')
 
-    def on_update_list (selpif, data):
-        print(a)
-a = [1,2]
+    def on_check_games (selpif, data):
+        print(data)
+
 socketIO = SocketIO('10.20.96.148', 8080, Namespace)
-socketIO.emit("update_list", 'update')
-socketIO.wait(seconds=1)
+# socketIO.emit("downtime", {'can_play': False, 'message': "System will update soon, please don't open new game."})
+# socketIO.emit("downtime", {'can_play': True, 'message': "System have updated."})
+socketIO.emit("check_games", 0)
+
+socketIO.wait(seconds=2)

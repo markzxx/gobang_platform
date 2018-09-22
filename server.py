@@ -12,9 +12,12 @@ from cryptography import fernet
 from aiohttp_session import setup, get_session, session_middleware
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 import mail
+import subprocess
+from code_check import CodeCheck
 
 DB_NAME = "sqlite.db"
 verify_map = {}
+downinfo = {'can_play': True, 'message': ""}
 
 class Http_handler:
     @aiohttp_jinja2.template('index')
@@ -86,10 +89,12 @@ class Http_handler:
                 del verify_map[data['sid']]
             else:
                 return aiohttp_jinja2.render_template('resetpwd.html', request, {'error': "Error: Wrong verify code."})
-        return aiohttp_jinja2.render_template('login.html', request, {})
+            raise web.HTTPFound('/login')
     
     async def upload(self, request):
         session = await get_session(request)
+        if 'sid' not in session:
+            return aiohttp_jinja2.render_template('login.html', request, {})
         sid = session['sid']
         reader = await request.multipart()
         field = await reader.next()
@@ -97,7 +102,9 @@ class Http_handler:
         size = 0
         if not os.path.exists("user_code/"):
             os.mkdir("user_code/")
-        with open(os.path.join('user_code/{}.py'.format(sid)), 'wb') as f:
+        if not os.path.exists("tem_code/"):
+            os.mkdir("tem_code/")
+        with open(os.path.join('tem_code/{}.py'.format(sid)), 'wb') as f:
             while True:
                 chunk = await field.read_chunk()
                 if not chunk:
@@ -106,6 +113,13 @@ class Http_handler:
                 f.write(chunk)
                 if size > 1024**2:
                     return aiohttp_jinja2.render_template('index.html', request, {'sid': sid, 'error': "Your code can not excess 1M."})
+        
+        #test code
+        code_checker = CodeCheck('tem_code/{}.py'.format(sid))
+        if not code_checker.check_code():
+            return aiohttp_jinja2.render_template('index.html', request,
+                                                  {'sid': sid, 'error': code_checker.errormsg})
+        subprocess.call('mv tem_code/{}.py user_code/{}.py'.format(sid, sid), shell=True)
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(sid))
             row = await cursor.fetchone()
@@ -203,6 +217,9 @@ async def message(soid, room):
 
 @sio.on('self_play')
 async def self_play(soid, data):
+    if not downinfo['can_play']:
+        await sio.emit('error', {'type': 3, 'info': downinfo['message']}, soid)
+        return
     player = str(data['player'])
     color = int(data['color'])
     print(player, 'self_play')
@@ -226,7 +243,7 @@ async def self_begin(player, white, black):
     players[player] = game_id
     games[game_id] = {'white': white, 'black': black, "chess_log": []}
     await push_game(player)
-    os.popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player))
+    subprocess.Popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player), stdout=open('output_god', 'w+'), stderr=open('error_god', 'w+'), shell=True)
     
 @sio.on('self_register')
 async def self_register(soid, player):
@@ -243,7 +260,9 @@ async def self_go(soid, data):  #data[player1, x, y, color]
         game_id = players[player]
         games[game_id]['chess_log'].append((game_id, data[1], data[2], data[3], int(time.time())))
         god = games[game_id]['god']
+        print(data)
         await sio.emit('self_go', data[1:], god)
+        await sio.emit('go', data[1:], room=player)
 
 @sio.on('self_finish')
 async def self_finish (soid, data):
@@ -256,6 +275,9 @@ async def self_finish (soid, data):
         
 @sio.on('play')
 async def play(soid, player):
+    if not downinfo['can_play']:
+        await sio.emit('error', {'type': 3, 'info': downinfo['message']}, soid)
+        return
     player = str(player)
     print(player, "play")
     if player in players:
@@ -282,7 +304,7 @@ async def begin(player1, white, black):
     players[player1] = game_id
     games[game_id] = {'white': white, 'black': black, "chess_log": []}
     await push_game(player1)
-    os.popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player1))
+    subprocess.Popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player1), stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'), shell=True)
 
 @sio.on('go')
 async def go(soid, data):  #data[player1, 0, x, y, color]
@@ -319,7 +341,17 @@ async def error_finish(soid, player):
 
 @sio.on('error')
 async def error(soid, data):
-    await sio.emit('error', {'type': 2,'info': data[1]}, room=data[0])
+    await sio.emit('error', {'type': 2, 'info': data[1]}, room=data[0])
+
+@sio.on('check_games')
+async def check_games (soid, data):
+    await sio.emit('check_games', games, soid)
+    
+@sio.on('downtime')
+async def downtime (soid, data):
+    downinfo['can_play'] = data['can_play']
+    downinfo['message'] = data['message']
+    await sio.emit('error', {'type': 3, 'info': data['message']})
 
 @sio.on('test_go')
 async def go(soid, data):

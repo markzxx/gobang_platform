@@ -53,9 +53,9 @@ function drawPiece(i, j) {
     // 当前游戏未结束且当前节点未落子
     if (IS_CAN_STEP && !IS_GAME_OVER && arrPieces[i][j] === 0) {
         // 画一个新棋子
-        drawNewPiece(i, j, IS_BLACK);
-        color = IS_BLACK?-1:1;
-        chess_log.push([i,j,color]);
+        // drawNewPiece(i, j, IS_BLACK);
+        color = IS_BLACK ? -1 : 1;
+        // chess_log.push([i,j,color]);
         socket.emit('self_go', [$('#sid').data('id'), i, j, color]);
     }
 }
@@ -113,6 +113,7 @@ function clientSocket(socket) {
     // console.log(info);
     drawNewPiece(info[0], info[1], info[2]==-1);
     chess_log.push(info);
+    IS_CAN_STEP = !IS_CAN_STEP;
   });
 
   socket.on('finish', function(winner) {
@@ -194,13 +195,13 @@ function bindButtonClick(socket) {
         $this.text('Stop');
         $(".user-status").attr("disabled", "disabled");
         IS_BLACK = Math.random()>0.5;
-        IS_CAN_STEP = true;
+        if (IS_BLACK)
+            IS_CAN_STEP = true;
         var AI_color = IS_BLACK ? 1 : -1;
         watch($this.data('id'));
         socket.emit('self_play', {'player': $this.data('id'), 'color': AI_color});
     }else{
-        stopSelfPlay();
-        drawChessBoard();
+        socket.emit('error_finish', $('#sid').data('id'));
     }
   });
 

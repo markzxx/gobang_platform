@@ -39,7 +39,11 @@ class CodeCheck():
     def check_code(self):
         if self.__check_forbidden_import() == False:
             return False
-        self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, 1, self.time_out)
+        try:
+            self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, 1, self.time_out)
+        except Exception:
+            self.errormsg = "Fail to init"
+            return False
         print("check1 passed")
         if self.__check_simple_chessboard() == False:
             return False
@@ -60,25 +64,30 @@ class CodeCheck():
                     self.errormsg = "import forbidden"
                     return False
         return True
+    
+    def __check_chessboard(self, chessboard):
+        try:
+            timeout(1)(self.agent.go)(np.copy(chessboard))
+        except Exception:
+            self.errormsg = traceback.format_exc()
+            return False
         
     def __check_simple_chessboard(self):
-        try:
-            timeout(1)(self.agent.go)(self.chessboard)
-        except MemoryError:
-            self.errormsg = "Memory Error"
-        except timeout_decorator.timeout_decorator.TimeoutError:
-            self.errormsg = "Time Limit Exceeded"
-        
+        if not self.__check_chessboard(np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)):
+            return False
+        if not self.__check_chessboard(self.chessboard):
+            return False
+    
         ## check validity
         try:
             if self.chessboard[self.agent.candidate_list[-1]] == 0:
                 return True
             else:
-                self.errormsg = "Invalid Position"
+                self.errormsg = "Can not pass usability test"
                 return False
         except ValueError:
-            self.errormsg = "Invalid Position"
+            self.errormsg = "Can not pass usability test"
             return False
         except IndexError:
-            self.errormsg = "Invalid Position"
+            self.errormsg = "Can not pass usability test"
             return False

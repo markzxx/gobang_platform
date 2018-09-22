@@ -14,17 +14,7 @@ import threading
 import inspect
 import ctypes
 
-
-global memory_size
-global fight_thread
-global player_memory
-global finish_data
-global player
-global fight_thread
-global god
-
-
-player_memory = {1:0,-1:0}
+player_memory = {1: 0, -1: 0}
 
 def get_mem():
     return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
@@ -106,52 +96,6 @@ class Namespace(BaseNamespace):
             socketIO.wait(seconds=1)
             socketIO.disconnect()
 
-
-def check_chess_board(chessboard,chessboard_size,pos,color):
-    winner = 0
-    def get_chess(chess_pos_list, size):
-        pos_list = []
-        for chess_pos in chess_pos_list:
-            # print("pre",chess_pos)
-            if chess_pos[0] >= 0 and chess_pos[0] < size and chess_pos[1] >= 0 and chess_pos[1] < size:
-                pos_list.append(chess_pos)
-        return pos_list
-
-    result = False
-    if len(np.where(chessboard == 0)[0]) == 0:
-        result = True
-        winner = 0
-    else:
-        x, y = pos
-        axis1 = get_chess([(x + i, y + i) for i in range(-4, 5)], chessboard_size)
-        axis2 = get_chess([(x - i, y + i) for i in range(-4, 5)], chessboard_size)
-        axis3 = get_chess([(x + i, y) for i in range(-4, 5)], chessboard_size)
-        axis4 = get_chess([(x, y + i) for i in range(-4, 5)], chessboard_size)
-        all_axis = [axis1, axis2, axis3, axis4]
-        all_pos_list = axis1 + axis2 + axis3 + axis4
-        # print(all_axis)
-        canvas = np.ones_like(chessboard, dtype=np.uint8)
-        canvas = canvas * 125
-
-        for axis in all_axis:
-
-            count = 0
-            for chess_pos in axis:
-
-                if chessboard[chess_pos[0], chess_pos[1]] == color:
-                    count += 1
-                else:
-                    count = 0
-                if count == 5:
-                    result = True
-                    #print(count, result)
-                    break
-
-            if result:
-                winner = color
-                break
-    return result, winner
-
 class God(object):
     def __init__(self, file_dic, player, white, black, chessboard_size, time_out):
 
@@ -173,75 +117,105 @@ class God(object):
         self.error = ""
 
 
-    def check_chess(self,pos, color):
+    def check_chess(self, pos, color):
         if pos[0]<0 or pos[0]>=self.chessboard_size or pos[1]<0 or pos[1]>=self.chessboard_size:
             self.error = self.error +"Dear "+str(self.color_user_map[color])+ ' : your postion of last chess is out of bound.\n'
             self.finish = True
             return True
 
-        if self.chessboard[pos[0], pos[1]]!=0:
+        if self.chessboard[pos[0], pos[1]] != 0:
             self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is not empty.\n'
             self.finish = True
             return True
 
+    def check_chess_board (self, pos, color):
+        def get_chess (chess_pos_list, size):
+            pos_list = []
+            for chess_pos in chess_pos_list:
+                # print("pre",chess_pos)
+                if chess_pos[0] >= 0 and chess_pos[0] < size and chess_pos[1] >= 0 and chess_pos[1] < size:
+                    pos_list.append(chess_pos)
+            return pos_list
+    
+        x, y = pos
+        axis1 = get_chess([(x + i, y + i) for i in range(-4, 5)], self.chessboard_size)
+        axis2 = get_chess([(x - i, y + i) for i in range(-4, 5)], self.chessboard_size)
+        axis3 = get_chess([(x + i, y) for i in range(-4, 5)], self.chessboard_size)
+        axis4 = get_chess([(x, y + i) for i in range(-4, 5)], self.chessboard_size)
+        all_axis = [axis1, axis2, axis3, axis4]
+        # all_pos_list = axis1 + axis2 + axis3 + axis4
+        # print(all_axis)
+        # canvas = np.ones_like(chessboard, dtype=np.uint8)
+        # canvas = canvas * 125
+        for axis in all_axis:
+            count = 0
+            for chess_pos in axis:
+            
+                if self.chessboard[chess_pos[0], chess_pos[1]] == color:
+                    count += 1
+                else:
+                    count = 0
+                # print('count', count, pos, color, chess_pos, chessboard[chess_pos[0], chess_pos[1]])
+                if count == 5:
+                    self.finish = True
+                    self.winner = color
+                    return
+    
+        if len(np.where(self.chessboard == 0)[0]) == 0:
+            self.finish = True
+            self.winner = 0
+
     def self_update(self, x, y, color):
         pos = (x, y)
+        color = int(color)
         self.last_pos = pos
-        assert self.chessboard[pos[0], pos[1]] == 0
-        self.chessboard[pos[0], pos[1]] = color
-        self.finish = self.judge(pos, color)
-        if god.finish:
-            self.winner = color
-            
+        assert self.chessboard[x, y] == 0
+        self.chessboard[x, y] = color
+        self.check_chess_board(pos, color)
+        
     def update(self, color):
         assert self.chessboard.all()<2 and self.chessboard.all()>-2
 
         if color == 1:
             try:
-                timeout(self.time_out)(self.white.go)(self.chessboard)#timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
+                timeout(self.time_out)(self.white.go)(np.copy(self.chessboard))#timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
             except MemoryError:
                 memory_error = traceback.format_exc()
                 self.memory_fail(memory_error)
                 return ''
             except timeout_decorator.timeout_decorator.TimeoutError:
                 pass
+            except Exception:
+                self.fail_step(color=color)
+                god.error = traceback.format_exc()
             tem_list = self.white.candidate_list
         else:
             try:
-                timeout(self.time_out)(self.black.go)(self.chessboard)#timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
+                timeout(self.time_out)(self.black.go)(np.copy(self.chessboard))#timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
             except MemoryError:
                 memory_error = traceback.format_exc()
                 self.memory_fail(memory_error)
                 return ''
             except timeout_decorator.timeout_decorator.TimeoutError:
                 pass
+            except Exception:
+                self.fail_step(color=color)
+                god.error = traceback.format_exc()
             tem_list = self.black.candidate_list
 
-        if len(tem_list)>0:
+        if len(tem_list) > 0:
             pos = tem_list[-1]
-            self.finish = self.check_chess(pos, color)
+            self.check_chess(pos, color)
             if not self.finish:
                 self.last_pos = pos
                 assert self.chessboard[pos[0], pos[1]] == 0
                 self.chessboard[pos[0], pos[1]] = color
-                self.finish = self.judge(pos, color)
+                self.check_chess_board(pos, color)
             else:
                 self.winner = -color
         else:
             self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your candidate list of chess is empty.\n'
             self.fail_step(color=color)
-
-
-    def judge(self, pos, color):
-
-        if len(np.where(self.chessboard == 0)[0]) == 0:
-            result = True
-            self.winner = 0
-        else:
-            result, winner = check_chess_board(self.chessboard, self.chessboard_size, pos, color)
-            self.finish = result
-            self.winner = winner
-        return result
 
     def fail_step(self, color):
         self.winner = -color
@@ -270,8 +244,6 @@ class God(object):
             self.winner = self.user_color_map[winner_play]
 
 def self_fight(file_dic, white, black, size, time_interval, player):
-
-
 
     begin_data = player
     
@@ -361,10 +333,8 @@ if __name__ == '__main__':
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
     player = arg_list[6]
-
-    start_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     
-    memory_size = 40*1024**2 # In bytes
+    memory_size = 1000*1024**2 # In bytes
     god = God(file_dic, player, white, black, size, time_interval)
 
     try:
@@ -372,13 +342,14 @@ if __name__ == '__main__':
             #fight_thread=threading.Thread(target=self_fight,args=[file_dic, white, black, size, time_interval, player])
             self_fight(file_dic, white, black, size, time_interval, player)
         else:
-            fight_thread=threading.Thread(target=fight,args=[file_dic, white, black, size, time_interval, player])
-            control_thread = threading.Thread(target=control)
+            fight(file_dic, white, black, size, time_interval, player)
+            # fight_thread=threading.Thread(target=fight,args=[file_dic, white, black, size, time_interval, player])
+            # control_thread = threading.Thread(target=control)
 
-            fight_thread.start()
-            control_thread.start()
-            fight_thread.join()
-            control_thread.join()
+            # fight_thread.start()
+            # control_thread.start()
+            # fight_thread.join()
+            # control_thread.join()
 
 
     except Exception:
@@ -386,7 +357,7 @@ if __name__ == '__main__':
         finish_data = (player, 0, 0)
         socketIO.emit("finish", finish_data)
 
-    socketIO.wait(seconds=200)
+    socketIO.wait(seconds=1000)
 
 
 
