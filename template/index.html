@@ -102,7 +102,7 @@
             <div style="position:absolute;right:0px;width:auto;height:100%;">
               <form action="logout" method="get" accept-charset="utf-8" enctype="multipart/form-data">
                 <ul class="nav navbar-nav navbar-right link-effect">
-                  <li><a href="javascript:void(0);" style="cursor:default;" id="sid" data-id="{{sid}}">Hello,{{sid}}</a></li>
+                  <li><a href="javascript:void(0);" style="cursor:default;" id="sid" data-id="{{sid}}" data-error="{{error}}">Hello,{{sid}}</a></li>
                   <li><a href="javascript:$('#logout').trigger('click');" style="color:#1ABC9C;text-shadow:0px 0px 4px #2ea48d;font-weight:bold;">Logout</a></li>
                 </ul>
                 <button style="display:none" id="logout" name="logout" type="submit"></button>
@@ -235,7 +235,8 @@
 								easingType: 'linear'
 					 		};
 							*/
-
+      if($('#sid').data('error'))
+          alert($('#sid').data('error'));
       $().UItoTop({
         easingType: 'easeOutQuart'
       });
