@@ -113,18 +113,18 @@ class Http_handler:
                 f.write(chunk)
                 if size > 1024**2:
                     return aiohttp_jinja2.render_template('index.html', request, {'sid': sid, 'error': "Your code can not excess 1M."})
-        
+
         #test code
         code_checker = CodeCheck('tem_code/{}.py'.format(sid))
         if not code_checker.check_code():
             return aiohttp_jinja2.render_template('index.html', request,
                                                   {'sid': sid, 'error': code_checker.errormsg})
-        subprocess.call('mv tem_code/{}.py user_code/{}.py'.format(sid, sid), shell=True)
+        subprocess.Popen('mv tem_code/{}.py user_code/{}.py'.format(sid, sid), shell=True)
         async with aiosqlite.connect(DB_NAME) as db:
-            cursor = await db.execute("SELECT * FROM users where sid='{}'".format(sid))
+            cursor = await db.execute("SELECT * FROM users where sid='{}' and submit_time != 0".format(sid))
             row = await cursor.fetchone()
             await cursor.close()
-            if row[2]:
+            if row:
                 await db.execute("update users set last_update=CURRENT_TIMESTAMP where sid='{}'".format(sid))
             else:
                 await db.execute("update users set submit_time=CURRENT_TIMESTAMP, last_update=CURRENT_TIMESTAMP where sid='{}'".format(sid))
@@ -228,7 +228,7 @@ async def self_play(soid, data):
     else:
         idx = find_rank(player)
         if idx == -1:
-            await sio.emit('error', {'type': 3, 'info': "You have not uploaded user_code."}, soid)
+            await sio.emit('error', {'type': 3, 'info': "You have not uploaded code."}, soid)
             return
         if color == 1:
             await self_begin(player, player, 'human')

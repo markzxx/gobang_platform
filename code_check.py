@@ -32,7 +32,7 @@ class CodeCheck():
         self.chessboard = np.reshape(self.chessboard, [15*15])
         self.chessboard[idx] = 0
         self.chessboard = np.reshape(self.chessboard, [15, 15])
-        self.errormsg = ''
+        self.errormsg = 'Error'
         # print(self.chessboard)
         
     
@@ -44,10 +44,10 @@ class CodeCheck():
         except Exception:
             self.errormsg = "Fail to init"
             return False
-        print("check1 passed")
-        if self.__check_simple_chessboard() == False:
+        # print("check1 passed")
+        if not self.__check_simple_chessboard():
             return False
-        print("check2 passed")
+        # print("check2 passed")
         return True
 
 
@@ -69,8 +69,9 @@ class CodeCheck():
         try:
             timeout(1)(self.agent.go)(np.copy(chessboard))
         except Exception:
-            self.errormsg = traceback.format_exc()
+            self.errormsg = "Error:" + traceback.format_exc()
             return False
+        return True
         
     def __check_simple_chessboard(self):
         if not self.__check_chessboard(np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)):
