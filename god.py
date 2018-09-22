@@ -65,7 +65,7 @@ def stop_thread(thread):
         memory_message = 'Dear '+str(god.color_user_map[1])+" and "+str(god.color_user_map[-1])+": You may get memory out together."+"\n "+str(god.color_user_map[1])+" use "+str(white_mem)+" MB.\n "+str(god.color_user_map[-1])+" use "+ str(black_mem)+" MB."
         #print("winner: ",god.color_user_map[0])
 
-    finish_data=(player, int(winner), int(failer))
+    finish_data=(player, winner, failer)
     socketIO.emit("error",[player,memory_message] )
     socketIO.emit("finish", finish_data)
     #print(god.color_user_map[1]," size is ", white_mem)
