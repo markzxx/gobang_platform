@@ -11,29 +11,16 @@ import psutil
 import timeout_decorator
 from socketIO_client import SocketIO, BaseNamespace
 from timeout_decorator import timeout
+import threading
+import signal
 
 player_memory = {1: 0, -1: 0}
 
 def get_mem():
     return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
 
-def _async_raise(tid, exctype):
-    """raises the exception, performs cleanup if needed"""
-    tid = ctypes.c_long(tid)
-    if not inspect.isclass(exctype):
-        exctype = type(exctype)
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
-    if res == 0:
-        raise ValueError("invalid thread id")
-    elif res != 1:
-        # """if it returns a number greater than one, you're in trouble,
-        # and you should call it again with exc=NULL to revert the effect"""
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
-        raise SystemError("PyThreadState_SetAsyncExc failed")
 
-
-def stop_thread(thread):
-    _async_raise(thread.ident, SystemExit)
+def deal_with_memory_out():
     white_mem = player_memory[1]
     black_mem = player_memory[-1]
     winner = 0
@@ -56,22 +43,20 @@ def stop_thread(thread):
     finish_data=(player, winner, failer)
     socketIO.emit("error",[player,memory_message] )
     socketIO.emit("finish", finish_data)
-    #print(god.color_user_map[1]," size is ", white_mem)
-    #print(god.color_user_map[-1]," size is ", black_mem)
+    socketIO.wait(seconds=1)
+    socketIO.disconnect()
+
+
 
 def control():
     judge = True
-    while fight_thread.is_alive() and judge:
+    while judge:
         size = psutil.Process(os.getpid()).memory_info().rss
-        print(size/(1024**2))
-        print('----------------')
         if size > memory_size:
-
-            try:
-                stop_thread(fight_thread)
-
-            except ValueError:
-                judge = False
+            deal_with_memory_out()
+            my_pid = os.getpid()
+            os.kill(my_pid, signal.SIGKILL)
+            judge = False
 
 
 class Namespace(BaseNamespace):
@@ -337,17 +322,13 @@ if __name__ == '__main__':
 
     try:
         if white == 'human' or black == 'human':
-            #fight_thread=threading.Thread(target=self_fight,args=[file_dic, white, black, size, time_interval, player])
             self_fight(file_dic, white, black, size, time_interval, player)
         else:
+            control_thread = threading.Thread(target=control)
+            control_thread.start()
             fight(file_dic, white, black, size, time_interval, player)
-            # fight_thread=threading.Thread(target=fight,args=[file_dic, white, black, size, time_interval, player])
-            # control_thread = threading.Thread(target=control)
 
-            # fight_thread.start()
             # control_thread.start()
-            # fight_thread.join()
-            # control_thread.join()
 
 
     except Exception:
