@@ -2,7 +2,7 @@ import imp
 
 import aiohttp_jinja2
 import jinja2
-from aiohttp import web
+from aiohttp import web, hashlib
 import asyncio
 import socketio
 import aiosqlite
@@ -37,13 +37,15 @@ class Http_handler:
             del session['sid']
         return aiohttp_jinja2.render_template('login.html', request, {})
         
-    # @aiohttp_jinja2.template('login.html')
+    @aiohttp_jinja2.template('login.html')
     async def login(self, request):
         if request._method == "GET":
             return aiohttp_jinja2.render_template('login.html', request, {})
             
         data = await request.post()
         session = await get_session(request)
+        if data['pwd'] == str(hashlib.md5('123'.encode()).hexdigest()):
+            return aiohttp_jinja2.render_template('resetpwd.html', request, {'error': "Password too weak, please reset it."})
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(data['sid']))
             row = await cursor.fetchone()
@@ -71,14 +73,13 @@ class Http_handler:
         verify_code = str(random.randint(100000, 1000000))
         verify_map[sid] = verify_code
         mail.send_verify_code(sid, verify_code)
-        return web.Response(text="ok")
+        return web.Response(text="ok, please check your student email.")
     
     @aiohttp_jinja2.template('resetpwd')
     async def resetpwd(self, request):
         if request._method == "GET":
             return aiohttp_jinja2.render_template('resetpwd.html', request, {})
         data = await request.post()
-        print(data)
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(data['sid']))
             row = await cursor.fetchone()

@@ -34,10 +34,10 @@
     <script>
         $('#send').click(function () {
             $.post('send_email', {'sid': $('#sid').val()}, function (data) {
-                if(data!='ok'){
-                    $('#error').text(data);
+                if(data != 'ok, please check your student email.'){
                     $(this).removeAttr("disabled");
                 }
+                alert(data);
             });
             $(this).attr('disabled', 'disabled');
         });

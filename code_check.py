@@ -41,6 +41,7 @@ class CodeCheck():
             return False
         try:
             self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, 1, self.time_out)
+            self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, -1, self.time_out)
         except Exception:
             self.errormsg = "Fail to init"
             return False
