@@ -1,6 +1,6 @@
-var CHESSBOARD_WIDTH = 450; // 棋盘大小
+var CHESSBOARD_WIDTH = 500; // 棋盘大小
 var CHESSBOARD_GRID = 30; // 棋盘每格大小
-var CHESSBOARD_MARGIN = 15; // 棋盘内边距
+var CHESSBOARD_MARGIN = 25; // 棋盘内边距
 var CHESS_SIZE = 0; // 棋盘格数
 var IS_BLACK = true; // 是否黑棋
 var IS_GAME_OVER = false; // 游戏是否结束
@@ -34,6 +34,9 @@ function drawChessBoard() {
 
   for (var i = 0; i < CHESS_SIZE; i++) {
     ctx.strokeStyle = '#444';
+      ctx.font = "20px";
+      ctx.fillText(i, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i - 3, CHESSBOARD_MARGIN - 3);
+      ctx.fillText(i, CHESSBOARD_MARGIN - 17, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i + 3);
     ctx.moveTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_MARGIN);
     ctx.lineTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_WIDTH - CHESSBOARD_MARGIN);
     ctx.stroke();
