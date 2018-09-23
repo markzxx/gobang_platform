@@ -34,9 +34,9 @@ function drawChessBoard() {
 
   for (var i = 0; i < CHESS_SIZE; i++) {
     ctx.strokeStyle = '#444';
-      ctx.font = "20px";
+      ctx.font = "13px bold";
       ctx.fillText(i, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i - 3, CHESSBOARD_MARGIN - 3);
-      ctx.fillText(i, CHESSBOARD_MARGIN - 17, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i + 3);
+      ctx.fillText(i, CHESSBOARD_MARGIN - 20, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i + 4);
     ctx.moveTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_MARGIN);
     ctx.lineTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_WIDTH - CHESSBOARD_MARGIN);
     ctx.stroke();

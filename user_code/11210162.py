@@ -1,7 +1,7 @@
-import numpy as np
 import random
-import time
-import os
+
+import numpy as np
+
 
 class AI(object):
     def __init__(self, chessboard_size, color, time_out):
@@ -12,6 +12,7 @@ class AI(object):
         self.candidate_list = []
         if color == -1:
             self.chessboard[self.chessboard_size//2,self.chessboard_size//2] = -1
+        self.m = []
 
     def go(self, chessboard):
         self.candidate_list.clear()
@@ -22,5 +23,4 @@ class AI(object):
         new_pos = idx[pos_idx]
         assert self.chessboard[new_pos[0],new_pos[1]]==0
         self.candidate_list.append(new_pos)
-
-
+        # self.m.append(np.arange(50 * 1000 * 100, dtype="u8"))
