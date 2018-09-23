@@ -262,6 +262,7 @@ async def self_register(soid, player):
 async def self_go(soid, data):  #data[player1, x, y, color]
     player = str(data[0])
     if player in players:
+        # print(data)
         game_id = players[player]
         games[game_id]['chess_log'].append((game_id, data[1], data[2], data[3], int(time.time())))
         god = games[game_id]['god']

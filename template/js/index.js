@@ -10,10 +10,10 @@ var range_max = 0;
 // 设置canvas的content的
 var ctx = null;
 
-var socket = io('http://10.20.96.148:8080');
-// var socket = io('http://127.0.0.1:8080');
+// var socket = io('http://10.20.96.148:8080');
+var socket = io('http://10.20.106.72:8080');
 // 棋盘坐标数组
-var arrPieces = new Array();
+var arrPieces = [];
 var chess_log = null;
 
 $(document).ready(function() {
@@ -41,7 +41,7 @@ function drawChessBoard() {
     ctx.lineTo(CHESSBOARD_WIDTH - CHESSBOARD_MARGIN, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i);
     ctx.stroke();
 
-    arrPieces[i] = new Array();
+      arrPieces[i] = [];
     for (var j = 0; j < CHESS_SIZE; j++) {
       arrPieces[i][j] = 0;
     }
@@ -62,8 +62,8 @@ function drawPiece(i, j) {
 
 //画一个棋子
 function drawNewPiece(i, j, isBlack) {
-  var x = CHESSBOARD_MARGIN + i * CHESSBOARD_GRID + 1;
-  var y = CHESSBOARD_MARGIN + j * CHESSBOARD_GRID + 1;
+    var y = CHESSBOARD_MARGIN + i * CHESSBOARD_GRID + 1;
+    var x = CHESSBOARD_MARGIN + j * CHESSBOARD_GRID + 1;
   ctx.beginPath();
   ctx.arc(x, y, Math.floor(CHESSBOARD_GRID / 2) - 2, 0, Math.PI * 2, true);
   ctx.closePath();
@@ -96,7 +96,7 @@ function clientSocket(socket) {
 
   socket.on('push_game', function(gameInfo) {
     drawChessBoard();
-    chess_log = new Array();
+      chess_log = [];
     $.each(gameInfo.chess_log, function(index, value) {
       drawNewPiece(value[1], value[2], value[3]==-1);
       chess_log.push(value);
@@ -170,8 +170,8 @@ function stopSelfPlay(){
 function bindButtonClick(socket) {
     //绑定棋盘落子
     $('#chessboard').click(function (e) {
-        var x = Math.floor(e.offsetX / CHESSBOARD_GRID);
-        var y = Math.floor(e.offsetY / CHESSBOARD_GRID);
+        var y = Math.floor(e.offsetX / CHESSBOARD_GRID);
+        var x = Math.floor(e.offsetY / CHESSBOARD_GRID);
         drawPiece(x, y);
     });
 
