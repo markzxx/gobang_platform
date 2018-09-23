@@ -31,27 +31,27 @@ def deal_with_memory_out(size):
     if size>2*memory_size:
         winner = god.color_user_map[-player_now[0]]
         failer = god.color_user_map[player_now[0]]
-        memory_message = 'Dear ' + str(god.color_user_map[-1]) + ": You may get memory out with more than " + str(
-            black_mem) + " MB.\n Your competitor " + str(god.color_user_map[1]) + " use " + str(white_mem) + " MB."
+        memory_message = 'Dear ' + str(failer) + ": You may get memory out with more than " + str(
+            memory_size) + " MB."
 
     else:
         if black_mem > memory_size:
             winner = god.color_user_map[1]
             failer = god.color_user_map[-1]
-            memory_message = 'Dear ' + str(god.color_user_map[-1]) + ": You may get memory out with more than " + str(
-                black_mem) + " MB.\n Your competitor " + str(god.color_user_map[1]) + " use " + str(white_mem) + " MB."
+            memory_message = 'Dear ' + str(failer) + ": You may get memory out with more than " + str(
+                memory_size) + " MB."
             # print("winner: ",god.color_user_map[1])
         elif white_mem > memory_size:
             winner = god.color_user_map[-1]
             failer = god.color_user_map[1]
-            memory_message = 'Dear ' + str(god.color_user_map[1]) + ": You may get memory out with more than " + str(
-                white_mem) + " MB.\n Your competitor " + str(god.color_user_map[-1]) + " use " + str(black_mem) + " MB."
+            memory_message = 'Dear ' + str(failer) + ": You may get memory out with more than " + str(
+                memory_size) + " MB."
             # print("winner: ",god.color_user_map[-1])
         else:
             memory_message = 'Dear ' + str(god.color_user_map[1]) + " and " + str(
                 god.color_user_map[-1]) + ": You may get memory out together." + "\n " + str(
-                god.color_user_map[1]) + " use " + str(white_mem) + " MB.\n " + str(
-                god.color_user_map[-1]) + " use " + str(black_mem) + " MB."
+                god.color_user_map[1]) + " use " + str(int(white_mem)) + " MB.\n " + str(
+                god.color_user_map[-1]) + " use " + str(int(black_mem)) + " MB."
             # print("winner: ",god.color_user_map[0])
 
 
