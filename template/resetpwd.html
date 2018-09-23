@@ -34,7 +34,7 @@
         $('#send').click(function () {
             $(this).attr('disabled', 'disabled');
             $.post('send_email', {'sid': $('#sid').val()}, function (data) {
-                $(this).removeAttr("disabled");
+                $('#send').removeAttr("disabled");
                 alert(data);
             });
         });
