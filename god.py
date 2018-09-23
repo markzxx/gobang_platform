@@ -14,31 +14,46 @@ from timeout_decorator import timeout
 import threading
 import signal
 
+player_now=[0]
+
 player_memory = {1: 0, -1: 0}
 
 def get_mem():
     return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
 
 
-def deal_with_memory_out():
+def deal_with_memory_out(size):
     white_mem = player_memory[1]
     black_mem = player_memory[-1]
     winner = 0
     failer = 0
     memory_message = ''
-    if white_mem<black_mem:
-        winner = god.color_user_map[1]
-        failer = god.color_user_map[-1]
-        memory_message = 'Dear '+str(god.color_user_map[-1])+": You may get memory out with more than "+str(black_mem)+" MB.\n Your competitor " +str(god.color_user_map[1])+ " use "+str(white_mem)+" MB."
-        #print("winner: ",god.color_user_map[1])
-    elif white_mem>black_mem:
-        winner = god.color_user_map[-1]
-        failer = god.color_user_map[1]
-        memory_message = 'Dear '+str(god.color_user_map[1])+": You may get memory out with more than "+str(white_mem)+" MB.\n Your competitor " + str(god.color_user_map[-1])+" use "+ str(black_mem)+" MB."
-        #print("winner: ",god.color_user_map[-1])
+    if size>2*memory_size:
+        winner = god.color_user_map[-player_now[0]]
+        failer = god.color_user_map[player_now[0]]
+        memory_message = 'Dear ' + str(god.color_user_map[-1]) + ": You may get memory out with more than " + str(
+            black_mem) + " MB.\n Your competitor " + str(god.color_user_map[1]) + " use " + str(white_mem) + " MB."
+
     else:
-        memory_message = 'Dear '+str(god.color_user_map[1])+" and "+str(god.color_user_map[-1])+": You may get memory out together."+"\n "+str(god.color_user_map[1])+" use "+str(white_mem)+" MB.\n "+str(god.color_user_map[-1])+" use "+ str(black_mem)+" MB."
-        #print("winner: ",god.color_user_map[0])
+        if black_mem > memory_size:
+            winner = god.color_user_map[1]
+            failer = god.color_user_map[-1]
+            memory_message = 'Dear ' + str(god.color_user_map[-1]) + ": You may get memory out with more than " + str(
+                black_mem) + " MB.\n Your competitor " + str(god.color_user_map[1]) + " use " + str(white_mem) + " MB."
+            # print("winner: ",god.color_user_map[1])
+        elif white_mem > memory_size:
+            winner = god.color_user_map[-1]
+            failer = god.color_user_map[1]
+            memory_message = 'Dear ' + str(god.color_user_map[1]) + ": You may get memory out with more than " + str(
+                white_mem) + " MB.\n Your competitor " + str(god.color_user_map[-1]) + " use " + str(black_mem) + " MB."
+            # print("winner: ",god.color_user_map[-1])
+        else:
+            memory_message = 'Dear ' + str(god.color_user_map[1]) + " and " + str(
+                god.color_user_map[-1]) + ": You may get memory out together." + "\n " + str(
+                god.color_user_map[1]) + " use " + str(white_mem) + " MB.\n " + str(
+                god.color_user_map[-1]) + " use " + str(black_mem) + " MB."
+            # print("winner: ",god.color_user_map[0])
+
 
     finish_data=(player, winner, failer)
     socketIO.emit("error",[player,memory_message] )
@@ -51,9 +66,9 @@ def deal_with_memory_out():
 def control():
     judge = True
     while judge:
-        size = psutil.Process(os.getpid()).memory_info().rss
-        if size > memory_size:
-            deal_with_memory_out()
+        size = get_mem()
+        if size > 2*memory_size or player_memory[1]>memory_size or player_memory[-1]>memory_size:
+            deal_with_memory_out(size)
             my_pid = os.getpid()
             os.kill(my_pid, signal.SIGKILL)
             judge = False
@@ -258,6 +273,9 @@ def fight(file_dic, white, black, size, time_interval, player):
         #--------------------------------
         time.sleep(0.0001)
         tem_color = -1
+        player_now[0] = tem_color
+        time.sleep(0.0001)
+
         memory_usage = get_mem()
         tem_mem = player_memory[tem_color]
 
@@ -274,6 +292,9 @@ def fight(file_dic, white, black, size, time_interval, player):
         #--------------------------------
         time.sleep(0.0001)
         tem_color = 1
+        player_now[0] = tem_color
+        time.sleep(0.0001)
+
         memory_usage = get_mem()
         tem_mem = player_memory[tem_color]
 
