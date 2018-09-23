@@ -356,8 +356,8 @@ if __name__ == '__main__':
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
     player = arg_list[6]
-    
-    memory_size = 1000*1024**2 # In bytes
+
+    memory_size = 100 * 1024 ** 2  # In bytes
     god = God(file_dic, player, white, black, size, time_interval)
 
     try:
@@ -367,9 +367,6 @@ if __name__ == '__main__':
             control_thread = threading.Thread(target=control)
             control_thread.start()
             fight(file_dic, white, black, size, time_interval, player)
-
-
-            # control_thread.start()
 
 
     except Exception:

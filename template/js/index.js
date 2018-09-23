@@ -1,7 +1,7 @@
-var CHESSBOARD_WIDTH = 500; // 棋盘大小
+var CHESSBOARD_WIDTH = 450; // 棋盘大小
 var CHESSBOARD_GRID = 30; // 棋盘每格大小
-var CHESSBOARD_MARGIN = 25; // 棋盘内边距
-var CHESS_SIZE = 0; // 棋盘格数
+var CHESSBOARD_MARGIN = 40; // 棋盘内边距
+var CHESS_SIZE = 15; // 棋盘格数
 var IS_BLACK = true; // 是否黑棋
 var IS_GAME_OVER = false; // 游戏是否结束
 var IS_CAN_STEP = false; // 是否可以下棋（对手下棋时己方不能下棋）
@@ -10,8 +10,8 @@ var range_max = 0;
 // 设置canvas的content的
 var ctx = null;
 
-// var socket = io('http://10.20.96.148:8080');
-var socket = io('http://10.20.106.72:8080');
+var socket = io('http://10.20.96.148:8080');
+// var socket = io('http://10.20.106.72:8080');
 // 棋盘坐标数组
 var arrPieces = [];
 var chess_log = null;
@@ -26,8 +26,8 @@ $(document).ready(function() {
 // 画出棋盘
 function drawChessBoard() {
   var canvas = document.getElementById('chessboard');
-  canvas.width = CHESSBOARD_WIDTH;
-  canvas.height = CHESSBOARD_WIDTH;
+    canvas.width = CHESSBOARD_WIDTH + 1 * CHESSBOARD_MARGIN;
+    canvas.height = CHESSBOARD_WIDTH + 1 * CHESSBOARD_MARGIN;
   ctx = canvas.getContext('2d');
   ctx.lineWidth = 1;
   CHESS_SIZE = Math.floor(CHESSBOARD_WIDTH / CHESSBOARD_GRID);
@@ -35,15 +35,14 @@ function drawChessBoard() {
   for (var i = 0; i < CHESS_SIZE; i++) {
     ctx.strokeStyle = '#444';
       ctx.font = "13px bold";
-      ctx.fillText(i, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i - 3, CHESSBOARD_MARGIN - 3);
-      ctx.fillText(i, CHESSBOARD_MARGIN - 20, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i + 4);
+      ctx.fillText(i, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i - 3, CHESSBOARD_MARGIN - 10);
+      ctx.fillText(i, CHESSBOARD_MARGIN - 30, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i + 4);
     ctx.moveTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_MARGIN);
-    ctx.lineTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_WIDTH - CHESSBOARD_MARGIN);
+      ctx.lineTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_WIDTH + CHESSBOARD_MARGIN - CHESSBOARD_GRID);
     ctx.stroke();
     ctx.moveTo(CHESSBOARD_MARGIN, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i);
-    ctx.lineTo(CHESSBOARD_WIDTH - CHESSBOARD_MARGIN, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i);
+      ctx.lineTo(CHESSBOARD_WIDTH + CHESSBOARD_MARGIN - CHESSBOARD_GRID, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i);
     ctx.stroke();
-
       arrPieces[i] = [];
     for (var j = 0; j < CHESS_SIZE; j++) {
       arrPieces[i][j] = 0;
@@ -173,8 +172,8 @@ function stopSelfPlay(){
 function bindButtonClick(socket) {
     //绑定棋盘落子
     $('#chessboard').click(function (e) {
-        var y = Math.floor(e.offsetX / CHESSBOARD_GRID);
-        var x = Math.floor(e.offsetY / CHESSBOARD_GRID);
+        var y = Math.round((e.offsetX - CHESSBOARD_MARGIN) / CHESSBOARD_GRID);
+        var x = Math.round((e.offsetY - CHESSBOARD_MARGIN) / CHESSBOARD_GRID);
         drawPiece(x, y);
     });
 
