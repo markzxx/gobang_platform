@@ -1,22 +1,22 @@
+import asyncio
+import base64
+import hashlib
 import imp
+import os
+import random
+import subprocess
+import time
 
 import aiohttp_jinja2
-import jinja2
-from aiohttp import web
-import asyncio
-import socketio
 import aiosqlite
-import random
-import os
-import time
-import hashlib
-import base64
-from cryptography import fernet
-from aiohttp_session import setup, get_session, session_middleware
+import jinja2
+import socketio
+from aiohttp import web
+from aiohttp_session import setup, get_session
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
+from cryptography import fernet
+
 import mail
-import subprocess
-from code_check import CodeCheck
 
 DB_NAME = "sqlite.db"
 verify_map = {}
@@ -167,7 +167,6 @@ def score(row):
 
 def find_rank(sid):
     idx = -1
-    print(rank_info)
     for i, info in enumerate(rank_info):
         if sid == info['sid']:
             idx = i
@@ -324,7 +323,7 @@ async def finish(soid, data):
     if data[0] in players:
         game_id = players[data[0]]
         await update_game_log(game_id, data[1], data[2])
-        await update_chess_log(game_id)
+        # await update_chess_log(game_id)
         await update_all_list()
         del games[game_id]
         del players[data[0]]

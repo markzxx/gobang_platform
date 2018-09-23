@@ -2,7 +2,9 @@ import ctypes
 import imp
 import inspect
 import os
+import signal
 import sys
+import threading
 import time
 import traceback
 
@@ -11,8 +13,6 @@ import psutil
 import timeout_decorator
 from socketIO_client import SocketIO, BaseNamespace
 from timeout_decorator import timeout
-import threading
-import signal
 
 player_now=[0]
 
@@ -94,7 +94,7 @@ def control():
             my_pid = os.getpid()
             os.kill(my_pid, signal.SIGKILL)
             judge = False
-        time.sleep(0.001)
+        time.sleep(0.1)
 
 
 class Namespace(BaseNamespace):
@@ -294,10 +294,8 @@ def fight(file_dic, white, black, size, time_interval, player):
     tem_color = -1
     while not god.finish:
         #--------------------------------
-        time.sleep(0.01)
         tem_color = -1
         player_now[0] = tem_color
-        time.sleep(0.01)
 
         memory_usage = get_mem()
         tem_mem = player_memory[tem_color]
@@ -313,10 +311,8 @@ def fight(file_dic, white, black, size, time_interval, player):
         #print(go_data)
 
         #--------------------------------
-        time.sleep(0.01)
         tem_color = 1
         player_now[0] = tem_color
-        time.sleep(0.01)
 
         memory_usage = get_mem()
         tem_mem = player_memory[tem_color]
