@@ -35,7 +35,7 @@ function drawChessBoard() {
   for (var i = 0; i < CHESS_SIZE; i++) {
     ctx.strokeStyle = '#444';
       ctx.font = "13px bold";
-      ctx.fillText(i, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i - 3, CHESSBOARD_MARGIN - 10);
+      ctx.fillText(i, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i - 3, CHESSBOARD_MARGIN - 15);
       ctx.fillText(i, CHESSBOARD_MARGIN - 30, CHESSBOARD_MARGIN + CHESSBOARD_GRID * i + 4);
     ctx.moveTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_MARGIN);
       ctx.lineTo(CHESSBOARD_MARGIN + CHESSBOARD_GRID * i, CHESSBOARD_WIDTH + CHESSBOARD_MARGIN - CHESSBOARD_GRID);
@@ -163,6 +163,9 @@ function rd(n, m) {
 function stopSelfPlay(){
     $('#self_play').data('name','play');
     $('#self_play').text('SelfPlay');
+    $('.user-status').text('play');
+    $('#player-status1').text("");
+    $('#player-status2').text("");
     $('#play').removeAttr("disabled");
     $('.range').removeAttr("disabled");
     IS_CAN_STEP = false;
@@ -192,18 +195,18 @@ function bindButtonClick(socket) {
    $('#self_play').click(function() {
     var $this = $(this);
     var status = $this.data('name');
+       var player = $this.data('id');
     if(status == 'play'){
         $this.data('name', 'stop');
         $this.text('Stop');
-        $(".user-status").attr("disabled", "disabled");
         IS_BLACK = Math.random()>0.5;
         if (IS_BLACK)
             IS_CAN_STEP = true;
         var AI_color = IS_BLACK ? 1 : -1;
-        watch($this.data('id'));
-        socket.emit('self_play', {'player': $this.data('id'), 'color': AI_color});
+        watch(player);
+        socket.emit('self_play', {'player': player, 'AI': player, 'color': AI_color});
     }else{
-        socket.emit('error_finish', $('#sid').data('id'));
+        socket.emit('error_finish', player);
     }
   });
 
@@ -280,12 +283,32 @@ function bindButtonClick(socket) {
       */
 }
 
+function playWith(sid) {
+    $('.user-status').removeClass('gaming-status');
+    $('.user-status').removeClass('label_active');
+    var bnt = $('#' + sid);
+    var player = $('#sid').data('id');
+    bnt.addClass('gaming-status');
+    bnt.addClass('label_active');
+    if (bnt.text() == 'play') {
+        bnt.text('stop');
+        IS_BLACK = Math.random() > 0.5;
+        if (IS_BLACK)
+            IS_CAN_STEP = true;
+        var AI_color = IS_BLACK ? 1 : -1;
+        watch(player);
+        socket.emit('self_play', {'player': player, 'AI': sid, 'color': AI_color});
+    } else {
+        socket.emit('error_finish', player);
+    }
+}
+
 function watch(sid) {
-  $('.user-status').text('watch');
-  $('.user-status').removeClass('gaming-status');
-  $('.user-status').removeClass('label_active');
-  $('#' + sid).addClass('gaming-status');
-  $('#' + sid).addClass('label_active');
+    // $('.user-status').text('watch');
+    // $('.user-status').removeClass('gaming-status');
+    // $('.user-status').removeClass('label_active');
+    // $('#' + sid).addClass('gaming-status');
+    // $('#' + sid).addClass('label_active');
   $('#watch_id').data('id', sid);
   socket.emit('watch', sid);
 }
@@ -394,7 +417,7 @@ function handlebarsUserList(userList) {
         now_rank=index+1;
         now_score=value.score;
       }
-      user_rank_html+='<tr class="' + state + ' rank-'+(index+1)+'"><td><p class="user-rank">' + (index + 1) + '</p></td><td><p class="user-id">' + value.sid + '</p></td>' + '<td><p class="user-score">' + value.score + '</p></td>' + '<td><button class="label user-status" id="' + value.sid + '" >watch</button></td></tr>';
+        user_rank_html += '<tr class="' + state + ' rank-' + (index + 1) + '"><td><p class="user-rank">' + (index + 1) + '</p></td><td><p class="user-id">' + value.sid + '</p></td>' + '<td><p class="user-score">' + value.score + '</p></td>' + '<td><button class="label user-status" id="' + value.sid + '" >play</button></td></tr>';
       state="";
     }else{
         if(now_sid==value.sid){
@@ -412,7 +435,7 @@ function handlebarsUserList(userList) {
 
   $('#rank_table').html(user_rank_html);
   $('.user-status').click(function(e) {
-    watch($(this).attr('id'));
+      playWith($(this).attr('id'));
   });
   $('#' + $('#watch_id').data('id')).addClass('gaming-status');
 }

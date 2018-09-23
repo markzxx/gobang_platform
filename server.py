@@ -226,19 +226,20 @@ async def self_play(soid, data):
         await sio.emit('error', {'type': 3, 'info': downinfo['message']}, soid)
         return
     player = str(data['player'])
+    AI = str(data['AI'])
     color = int(data['color'])
     print(player, 'self_play')
     if player in players:
         await sio.emit('error', {'type': 1, 'info': "You are in an unfinished game."}, soid)
     else:
-        idx = find_rank(player)
+        idx = find_rank(AI)
         if idx == -1:
-            await sio.emit('error', {'type': 3, 'info': "You have not uploaded code."}, soid)
+            await sio.emit('error', {'type': 3, 'info': "No valid code."}, soid)
             return
         if color == 1:
-            await self_begin(player, player, 'human')
+            await self_begin(player, AI, 'human-' + player)
         else:
-            await self_begin(player, 'human', player)
+            await self_begin(player, 'human-' + player, AI)
 
 async def self_begin(player, white, black):
     game_id = 0
