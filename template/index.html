@@ -128,7 +128,6 @@
           <div class="header_pannel">
             <div class="col-md-3">
               <button type="button" data-id="{{sid}}" data-name="play" class="btn btn-success" id="play" style="float:left;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i>&nbsp;Play</button>
-                <button type="button" data-id="{{sid}}" data-name="play" class="btn btn-success" id="self_play" style="float:left;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i>&nbsp;SelfPlay</button>
             </div>
             <div class="col-md-6">
               <button type="button" class="btn btn-default" id="start"><i class="glyphicon glyphicon-step-backward"></i></button>
@@ -166,7 +165,9 @@
             </div>
           </div>
           <div class="footer_pannel">
-            <div class="col-md-4"></div>
+            <div class="col-md-4">
+              <button type="button" data-id="{{sid}}" data-name="play" class="btn btn-success" id="self_play" style="float:left;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i>&nbsp;Test</button>
+            </div>
             <div class="col-md-4" style="text-align:right;">
               <div class="upload_code">
                 <button class="btn btn-primary" type="button" onclick="$('#code').trigger('click');" id="trigger_code" name="trigger_code" style="background-color:#1ABC9C;"><i class="glyphicon glyphicon-upload"></i>&nbsp;Upload Code</button>

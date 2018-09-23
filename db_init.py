@@ -21,9 +21,9 @@ async def init_db():
         )
         
         test_users = ['123', "456", "789", '111', '2', '222', '333', '888', '999', '12345', '11210162']
-        with open('students.txt', 'r') as f:
-            for line in f.readlines():
-                test_users.append(line.strip('\n'))
+       # with open('students.txt', 'r') as f:
+       #     for line in f.readlines():
+       #         test_users.append(line.strip('\n'))
         for user in test_users:
             await db.execute("insert or ignore into users values ('{}', '{}', 0, 0, 0)".format(user, str(hashlib.md5('888'.encode()).hexdigest())))
         await db.commit()
