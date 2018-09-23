@@ -2,13 +2,14 @@ import imp
 
 import aiohttp_jinja2
 import jinja2
-from aiohttp import web, hashlib
+from aiohttp import web
 import asyncio
 import socketio
 import aiosqlite
 import random
 import os
 import time
+import hashlib
 import base64
 from cryptography import fernet
 from aiohttp_session import setup, get_session, session_middleware
@@ -45,7 +46,7 @@ class Http_handler:
         data = await request.post()
         session = await get_session(request)
         if data['pwd'] == str(hashlib.md5('123'.encode()).hexdigest()):
-            return aiohttp_jinja2.render_template('resetpwd.html', request, {'error': "Password too weak, please reset it."})
+            return aiohttp_jinja2.render_template('login.html', request, {'error': "Password too weak, please reset it."})
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(data['sid']))
             row = await cursor.fetchone()
@@ -134,7 +135,7 @@ class Http_handler:
                 await db.execute("update users set submit_time=CURRENT_TIMESTAMP, last_update=CURRENT_TIMESTAMP where sid='{}'".format(sid))
             await db.commit()
         await update_all_list()
-        return aiohttp_jinja2.render_template('index.html', request, {'sid': sid})
+        return aiohttp_jinja2.render_template('index.html', request, {'sid': sid, 'error': "Upload success, usability test pass."})
 
 sio = socketio.AsyncServer()
 app = web.Application()
@@ -166,6 +167,7 @@ def score(row):
 
 def find_rank(sid):
     idx = -1
+    print(rank_info)
     for i, info in enumerate(rank_info):
         if sid == info['sid']:
             idx = i
@@ -264,7 +266,6 @@ async def self_go(soid, data):  #data[player1, x, y, color]
         game_id = players[player]
         games[game_id]['chess_log'].append((game_id, data[1], data[2], data[3], int(time.time())))
         god = games[game_id]['god']
-        print(data)
         await sio.emit('self_go', data[1:], god)
         await sio.emit('go', data[1:], room=player)
 

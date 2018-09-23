@@ -22,10 +22,9 @@
                 <td><input id="newpwd" title="newpwd" name="newpwd" type="password" value=""/></td>
             </tr>
             <tr>
-                <td colspan="2" align="right"><input type="submit" value="submit"/></td>
+                <td colspan="2" align="right"><input id='submit' type="submit" value="submit" data-error="{{error}}"/></td>
             </tr>
             </table>
-                <p id="error">{{error}}</p>
             </center>
         </form>
     <script src="static/js/md5.js"> </script>
@@ -41,6 +40,11 @@
             });
             $(this).attr('disabled', 'disabled');
         });
+
+        $(document).ready(function() {
+           if($('#submit').data('error'))
+          alert($('#submit').data('error'));
+       });
 
     function jsMd5(){
         if(!$('#sid').val() || !$('#newpwd').val() || !$('#verify_code').val()) {
