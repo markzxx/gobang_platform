@@ -42,6 +42,15 @@
       -ms-user-select: none;
       user-select: none;
     }
+    .login_msg{
+      display:none;
+      max-height:40px;
+      min-height:25px;
+      font-size:0.8em;
+      text-align: center;
+      color:#de2562;
+      padding:2%;
+    }
   </style>
 </head>
 
@@ -61,6 +70,10 @@
               <span class="us_uer"></span>
               <input id="pwd" title="pwd" name="pwd" type="password" class="text" style="color: #000000 !important; position:absolute; z-index:100;" value="" placeholder="Password">
             </div>
+            <div class="login_msg">
+              <span>Error :</span>
+              <span id="err_msg">Please Login.</span>
+            </div>
             <div id="LOGIN" data-error="{{error}}" class="mb2"><button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted" type="submit" data-text="登录"><span>Login</span></button></div>
             <div id="resetpwd" class="mb2"><button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted" type="button" data-text="重置密码"><span>Reset Password</span></button></div>
             <!--<div id="help_text"><cite>Registration is closed, contact QQ565323034 for help.</cite></div>-->
@@ -69,6 +82,7 @@
       </div>
     </div>
   </div>
+
   <!-- /container -->
   <script src="static/js/TweenLite.min.js"></script>
   <script src="static/js/EasePack.min.js"></script>
@@ -79,9 +93,26 @@
   </div>
   <script src="static/js/md5.js"></script>
   <script>
-       $(document).ready(function() {
+   function open_msg(text){
+     $(".login_msg").css({"display":"block","opacity":"0%"});
+     $(".login_msg").animate({"opacity":"100%"},500)
+     $("#err_msg").html(text);
+     // console.log($('.login_msg').css("display"));
+     setTimeout("close_modal()",2000);
+   }
+
+   function close_modal(){
+     $(".login_msg").animate({"opcity":"0%"},500)
+     $(".login_msg").css("display","none");
+     $(".login_msg").html();
+   }
+        $(document).ready(function() {
+          // open_msg("HHHaa");
            if($('#LOGIN').data('error'))
-          alert($('#LOGIN').data('error'));
+           {
+             open_msg($('#LOGIN').data('error'));
+
+           }
        });
 
         $('#resetpwd').click(function() {
@@ -93,6 +124,7 @@
           var pwd = document.getElementById("pwd");
 
           if (pwd.value == "" || sid.value == "") {
+            open_msg("Please input your sid and pwd.")
             return false;
           }
           pwd.value = md5(pwd.value);
