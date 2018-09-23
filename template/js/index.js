@@ -164,8 +164,8 @@ function stopSelfPlay(){
     $('#self_play').data('name','play');
     $('#self_play').text('SelfPlay');
     $('.user-status').text('play');
-    $('#player-status1').text("");
-    $('#player-status2').text("");
+    // $('#player-status1').text("");
+    // $('#player-status2').text("");
     $('#play').removeAttr("disabled");
     $('.range').removeAttr("disabled");
     IS_CAN_STEP = false;
