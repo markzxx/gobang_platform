@@ -92,9 +92,9 @@
       display:none;
       max-height:40px;
       min-height:25px;
-      font-size:0.8em;
+      font-size:1.2em;
       text-align: center;
-      color:#de2562;
+      color:rgb(244, 50, 114);
       padding:2%;
     }
   </style>
@@ -137,9 +137,11 @@
   <script src="static/js/md5.js"></script>
   <script>
   function open_modal(text){
+
     $(".login_msg").css({"display":"block","opacity":"0%"});
+
     $(".login_msg").animate({"opacity":"100%"},500)
-    console.log(text)
+
     $("#err_msg").html(text);
     // console.log($('.login_msg').css("display"));
     setTimeout("close_modal()",2000);
@@ -148,6 +150,7 @@
   function close_modal(){
     $(".login_msg").animate({"opcity":"0%"},500)
     $(".login_msg").css("display","none");
+
     $(".login_msg").html("");
   }
 
