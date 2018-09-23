@@ -18,6 +18,28 @@ player_now=[0]
 
 player_memory = {1: 0, -1: 0}
 
+
+
+
+def _async_raise(tid, exctype):
+    """raises the exception, performs cleanup if needed"""
+    tid = ctypes.c_long(tid)
+    if not inspect.isclass(exctype):
+        exctype = type(exctype)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def stop_thread(thread):
+    _async_raise(thread.ident, SystemExit)
+
+
 def get_mem():
     return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
 
@@ -72,6 +94,7 @@ def control():
             my_pid = os.getpid()
             os.kill(my_pid, signal.SIGKILL)
             judge = False
+        time.sleep(0.001)
 
 
 class Namespace(BaseNamespace):
@@ -271,10 +294,10 @@ def fight(file_dic, white, black, size, time_interval, player):
     tem_color = -1
     while not god.finish:
         #--------------------------------
-        time.sleep(0.0001)
+        time.sleep(0.01)
         tem_color = -1
         player_now[0] = tem_color
-        time.sleep(0.0001)
+        time.sleep(0.01)
 
         memory_usage = get_mem()
         tem_mem = player_memory[tem_color]
@@ -290,10 +313,10 @@ def fight(file_dic, white, black, size, time_interval, player):
         #print(go_data)
 
         #--------------------------------
-        time.sleep(0.0001)
+        time.sleep(0.01)
         tem_color = 1
         player_now[0] = tem_color
-        time.sleep(0.0001)
+        time.sleep(0.01)
 
         memory_usage = get_mem()
         tem_mem = player_memory[tem_color]
@@ -349,6 +372,7 @@ if __name__ == '__main__':
             control_thread.start()
             fight(file_dic, white, black, size, time_interval, player)
 
+
             # control_thread.start()
 
 
@@ -358,6 +382,10 @@ if __name__ == '__main__':
         socketIO.emit("finish", finish_data)
 
     if god.finish:
+        try:
+            stop_thread(control_thread)
+        except Exception:
+            print(traceback.format_exc())
         socketIO.wait(seconds=1)
         socketIO.disconnect()
 
