@@ -1,18 +1,16 @@
+import ctypes
 import imp
-import numpy as np
-from timeout_decorator import timeout
-import time
+import inspect
+import os
 import sys
-import resource
+import time
 import traceback
+
+import numpy as np
+import psutil
 import timeout_decorator
 from socketIO_client import SocketIO, BaseNamespace
-import os
-
-import psutil
-import threading
-import inspect
-import ctypes
+from timeout_decorator import timeout
 
 player_memory = {1: 0, -1: 0}
 
@@ -357,12 +355,8 @@ if __name__ == '__main__':
         finish_data = (player, 0, 0)
         socketIO.emit("finish", finish_data)
 
-    socketIO.wait(seconds=1000)
+    if god.finish:
+        socketIO.wait(seconds=1)
+        socketIO.disconnect()
 
-
-
-
-
-
-
-
+    socketIO.wait()
