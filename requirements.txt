@@ -15,6 +15,7 @@ Jinja2==2.10
 MarkupSafe==1.0
 multidict==4.4.0
 numpy==1.15.1
+psutil==5.4.7
 pycparser==2.18
 python-engineio==2.2.0
 python-socketio==2.0.0
