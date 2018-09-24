@@ -10,8 +10,8 @@ var range_max = 0;
 // 设置canvas的content的
 var ctx = null;
 
-var socket = io('http://10.20.96.148:8080');
-// var socket = io('http://10.20.106.72:8080');
+// var socket = io('http://10.20.96.148:8080');
+var socket = io('http://10.20.106.72:8080');
 // 棋盘坐标数组
 var arrPieces = [];
 var chess_log = null;
@@ -110,6 +110,10 @@ function clientSocket(socket) {
     setGameStatus('Game Begin');
     $('.range').attr("disabled", "disabled");
   });
+
+    socket.on('register', function (info) {
+        $(".user-status").removeAttr("disabled");
+    });
 
   socket.on('go', function(info) {
     // console.log(info);
@@ -298,6 +302,7 @@ function playWith(sid) {
     // bnt.addClass('label_active');
     if (bnt.text() == 'play') {
         switchStatus(bnt, 'stop', 'gaming-stop');
+        $(".user-status").attr("disabled", "disabled");
         IS_BLACK = Math.random() > 0.5;
         if (IS_BLACK)
             IS_CAN_STEP = true;

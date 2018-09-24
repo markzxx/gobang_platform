@@ -100,6 +100,9 @@ def control():
 class Namespace(BaseNamespace):
     def on_connect(selpif):
         print ('[Connected]')
+
+    def on_finish (selpif, data):
+        socketIO.disconnect()
         
     def on_self_go (selpif, data):
         god.self_update(data[0], data[1], data[2])

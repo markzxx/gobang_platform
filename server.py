@@ -258,6 +258,7 @@ async def self_register(soid, player):
     if player in players:
         game_id = players[player]
         games[game_id]['god'] = soid
+        await sio.emit('register', 0, room=player)
 
 @sio.on('self_go')
 async def self_go(soid, data):  #data[player1, x, y, color]
@@ -327,6 +328,8 @@ async def finish(soid, data):
         await update_game_log(game_id, data[1], data[2])
         # await update_chess_log(game_id)
         await update_all_list()
+        if 'god' in games[game_id]:
+            await sio.emit('finish', 0, games[game_id]['god'])
         del games[game_id]
         del players[data[0]]
         await sio.emit('finish', data[1], room=data[0])
@@ -340,10 +343,11 @@ async def error_finish(soid, player):
         await update_game_log(game_id, 0, 0)
         # await update_chess_log(game_id)
         # await update_all_list()
+        if 'god' in games[game_id]:
+            await sio.emit('finish', 0, games[game_id]['god'])
         del games[game_id]
         del players[player]
         await sio.emit('error_finish', 0, room=player)
-        time.sleep(0.2)
 
 @sio.on('error')
 async def error(soid, data):

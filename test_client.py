@@ -5,7 +5,8 @@ class Namespace(BaseNamespace):
         print ('[Connected]')
 
     def on_check_games (selpif, data):
-        print(data)
+        for a in data:
+            print(a)
 
 socketIO = SocketIO('10.20.96.148', 8080, Namespace)
 # socketIO.emit("downtime", {'can_play': False, 'message': "System will update soon, please don't open new game."})
