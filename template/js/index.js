@@ -163,7 +163,7 @@ function rd(n, m) {
 function stopSelfPlay(){
     $('#self_play').data('name','play');
     $('#self_play').text('SelfPlay');
-    $('.user-status').text('play');
+    switchStatus($('.user-status'), 'play', 'gaming-status');
     // $('#player-status1').text("");
     // $('#player-status2').text("");
     $('#play').removeAttr("disabled");
@@ -283,15 +283,21 @@ function bindButtonClick(socket) {
       */
 }
 
+function switchStatus(bnt, text, status) {
+    bnt.removeClass('gaming-status');
+    bnt.removeClass('gaming-stop');
+    bnt.addClass(status);
+    bnt.text(text);
+}
+
 function playWith(sid) {
-    $('.user-status').removeClass('gaming-status');
-    $('.user-status').removeClass('label_active');
+    // $('.user-status').removeClass('label_active');
     var bnt = $('#' + sid);
     var player = $('#sid').data('id');
-    bnt.addClass('gaming-status');
-    bnt.addClass('label_active');
+    // bnt.addClass('gaming-status');
+    // bnt.addClass('label_active');
     if (bnt.text() == 'play') {
-        bnt.text('stop');
+        switchStatus(bnt, 'stop', 'gaming-stop');
         IS_BLACK = Math.random() > 0.5;
         if (IS_BLACK)
             IS_CAN_STEP = true;
@@ -299,6 +305,7 @@ function playWith(sid) {
         watch(player);
         socket.emit('self_play', {'player': player, 'AI': sid, 'color': AI_color});
     } else {
+        switchStatus(bnt, 'play', 'gaming-status');
         socket.emit('error_finish', player);
     }
 }
@@ -437,7 +444,7 @@ function handlebarsUserList(userList) {
   $('.user-status').click(function(e) {
       playWith($(this).attr('id'));
   });
-    // $('#' + $('#watch_id').data('id')).addClass('gaming-status');
+    $('.user-status').addClass('gaming-status');
 }
 
 // 设置游戏状态

@@ -341,8 +341,12 @@ content: 'Legendary';
   margin-right: 5px;
 }
 
+.gaming-stop {
+    background-color: #ff464e;
+}
+
 .gaming-status {
-  background-color: #1ABC9C;
+    background-color: #1ABC9C;
 }
 
 .page_active {
