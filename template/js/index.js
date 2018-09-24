@@ -10,8 +10,8 @@ var range_max = 0;
 // 设置canvas的content的
 var ctx = null;
 
-// var socket = io('http://10.20.96.148:8080');
-var socket = io('http://10.20.106.72:8080');
+var socket = io('http://10.20.96.148:8080');
+// var socket = io('http://10.20.106.72:8080');
 // 棋盘坐标数组
 var arrPieces = [];
 var chess_log = null;
