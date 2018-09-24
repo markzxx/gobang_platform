@@ -437,7 +437,7 @@ function handlebarsUserList(userList) {
   $('.user-status').click(function(e) {
       playWith($(this).attr('id'));
   });
-  $('#' + $('#watch_id').data('id')).addClass('gaming-status');
+    // $('#' + $('#watch_id').data('id')).addClass('gaming-status');
 }
 
 // 设置游戏状态
