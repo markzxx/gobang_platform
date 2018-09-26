@@ -395,11 +395,13 @@ async def update_all_list(sid=None, data=None):
         max_game_id = row[0]
         if winner == loser:
             continue
-        score_info[winner] += 5
-        if score_info[loser] >= 5:
-            score_info[loser] -= 5
-        else:
-            score_info[loser] = 0
+        if winner in score_info:
+            score_info[winner] += 5
+        if loser in score_info:
+            if score_info[loser] >= 5:
+                score_info[loser] -= 5
+            else:
+                score_info[loser] = 0
     
     rank_info = [{'sid': k, 'score': v} for k, v in score_info.items()]
     rank_info.sort(key=lambda x: (x['score'], random.random()), reverse=True)
