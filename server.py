@@ -385,16 +385,16 @@ async def update_all_list(sid=None, data=None):
         cursor = await db.execute("SELECT winner, loser FROM game_log")
         rows = await cursor.fetchall()
         await cursor.close()
-        for row in rows:
-            winner = str(row[0])
-            loser = str(row[1])
-            if winner == loser:
-                continue
-            score_info[winner] += 5
-            if score_info[loser] >= 5:
-                score_info[loser] -= 5
-            else:
-                score_info[loser] = 0
+    for row in rows:
+        winner = str(row[0])
+        loser = str(row[1])
+        if winner == loser:
+            continue
+        score_info[winner] += 5
+        if score_info[loser] >= 5:
+            score_info[loser] -= 5
+        else:
+            score_info[loser] = 0
     rank_info = [{'sid': k, 'score': v} for k, v in score_info.items()]
     rank_info.sort(key=lambda x: (x['score'], random.random()), reverse=True)
     await sio.emit('update_list', rank_info)
