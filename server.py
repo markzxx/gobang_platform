@@ -6,7 +6,6 @@ import os
 import random
 import subprocess
 import time
-from collections import defaultdict
 
 import aiohttp_jinja2
 import aiosqlite
@@ -48,20 +47,21 @@ class Http_handler:
         session = await get_session(request)
         if data['pwd'] == str(hashlib.md5('123'.encode()).hexdigest()):
             return {'error': "Password too weak, please reset it."}
+
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(data['sid']))
             row = await cursor.fetchone()
             await cursor.close()
-            if row and row[1] != data['pwd']:
-                return {'error': "Password wrong"}
-            elif not row:
-                return {'error': "Student Id not exist"}
-            # elif not row:
-            #     await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
-            #     await db.commit()
-            else:
-                session['sid'] = data['sid']
-                return aiohttp_jinja2.render_template('index.html', request, {'sid': data['sid']})
+        if row and row[1] != data['pwd']:
+            return {'error': "Password wrong"}
+        elif not row:
+            return {'error': "Student Id not exist"}
+        # elif not row:
+        #     await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
+        #     await db.commit()
+        else:
+            session['sid'] = data['sid']
+            return aiohttp_jinja2.render_template('index.html', request, {'sid': data['sid']})
 
     async def send_email (self, request):
         data = await request.post()
@@ -70,8 +70,8 @@ class Http_handler:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(sid))
             row = await cursor.fetchone()
             await cursor.close()
-            if not row:
-                return web.Response(text="Error: StudentId not exist")
+        if not row:
+            return web.Response(text="Error: StudentId not exist")
         verify_code = str(random.randint(100000, 1000000))
         verify_map[sid] = verify_code
         mail.send_verify_code(sid, verify_code)
@@ -158,6 +158,8 @@ secret_key = base64.urlsafe_b64decode(fernet_key)
 setup(app, EncryptedCookieStorage(secret_key))
 
 rank_info = []
+score_info = {}
+max_game_id = 0
 games = {}
 players = {}
 
@@ -371,23 +373,26 @@ async def go(soid, data):
     await sio.emit('go', data[1:], room=games[game_id]['white'])
     await sio.emit('go', data[1:], room=games[game_id]['black'])
 
+
 async def update_all_list(sid=None, data=None):
-    global rank_info
-    score_info = defaultdict(int)
+    global rank_info, score_info, max_game_id
+    
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute("SELECT sid FROM users WHERE submit_time!=0")
-        rows = await cursor.fetchall()
+        users = await cursor.fetchall()
         await cursor.close()
-        for row in rows:
+    for row in users:
+        if row[0] not in score_info:
             score_info[row[0]] = 0
 
     async with aiosqlite.connect(DB_NAME) as db:
-        cursor = await db.execute("SELECT winner, loser FROM game_log")
-        rows = await cursor.fetchall()
+        cursor = await db.execute("SELECT id, winner, loser FROM game_log WHERE id>?", [max_game_id])
+        logs = await cursor.fetchall()
         await cursor.close()
-    for row in rows:
-        winner = str(row[0])
-        loser = str(row[1])
+    for row in logs:
+        winner = str(row[1])
+        loser = str(row[2])
+        max_game_id = row[0]
         if winner == loser:
             continue
         score_info[winner] += 5
@@ -395,6 +400,7 @@ async def update_all_list(sid=None, data=None):
             score_info[loser] -= 5
         else:
             score_info[loser] = 0
+    
     rank_info = [{'sid': k, 'score': v} for k, v in score_info.items()]
     rank_info.sort(key=lambda x: (x['score'], random.random()), reverse=True)
     await sio.emit('update_list', rank_info)
