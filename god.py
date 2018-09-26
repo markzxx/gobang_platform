@@ -385,4 +385,6 @@ if __name__ == '__main__':
         socketIO.wait(seconds=1)
         socketIO.disconnect()
 
-    socketIO.wait()
+    socketIO.wait(600)
+    socketIO.emit("finish", (player, 0, 0))
+    socketIO.wait(1)

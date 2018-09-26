@@ -119,7 +119,7 @@ class Http_handler:
                     return aiohttp_jinja2.render_template('index.html', request, {'sid': sid, 'error': "Your code can not excess 1M."})
 
         #test code
-        code_checker = imp.load_source('CodeCheck', 'code_check.py').CodeCheck('tem_code/{}.py'.format(sid))
+        code_checker = imp.load_source('CodeCheck', 'code_check.py').CodeCheck('tem_code/{}.py'.format(sid), 15)
         # code_checker = CodeCheck('tem_code/{}.py'.format(sid))
         if not code_checker.check_code():
             return aiohttp_jinja2.render_template('index.html', request,
