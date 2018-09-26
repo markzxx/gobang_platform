@@ -1,11 +1,8 @@
-import aiosqlite
 import asyncio
-import logging
-import os
-import sys
-import traceback
 import hashlib
-import random
+import os
+
+import aiosqlite
 
 DB_NAME = "sqlite.db"
 
@@ -31,7 +28,7 @@ async def init_db():
         await db.execute(
             "create table game_log "
             "(id INTEGER primary key autoincrement, white_sid varchar(12), black_sid varchar(12), start_time time,"
-            "end_time time, winner int, loser int, "
+            "end_time time, winner varchar(12), loser varchar(12), "
             "FOREIGN KEY(white_sid) REFERENCES users(sid), FOREIGN KEY(black_sid) REFERENCES users(sid),"
             "UNIQUE(white_sid, black_sid, start_time))"
         )

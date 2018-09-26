@@ -6,6 +6,7 @@ import os
 import random
 import subprocess
 import time
+from collections import defaultdict
 
 import aiohttp_jinja2
 import aiosqlite
@@ -23,38 +24,38 @@ verify_map = {}
 downinfo = {'can_play': True, 'message': ""}
 
 class Http_handler:
-    @aiohttp_jinja2.template('index')
+    @aiohttp_jinja2.template('index.html')
     async def index(self, request):
         session = await get_session(request)
         if 'sid' in session:
-            return aiohttp_jinja2.render_template('index.html', request, {'sid': session['sid']})
+            return {'sid': session['sid']}
         else:
             return aiohttp_jinja2.render_template('login.html', request, {})
-
-    @aiohttp_jinja2.template('logout')
+    
+    @aiohttp_jinja2.template('login.html')
     async def logout(self, request):
         session = await get_session(request)
         if 'sid' in session:
             del session['sid']
-        return aiohttp_jinja2.render_template('login.html', request, {})
+        return {}
         
     @aiohttp_jinja2.template('login.html')
     async def login(self, request):
         if request._method == "GET":
-            return aiohttp_jinja2.render_template('login.html', request, {})
+            return {}
             
         data = await request.post()
         session = await get_session(request)
         if data['pwd'] == str(hashlib.md5('123'.encode()).hexdigest()):
-            return aiohttp_jinja2.render_template('login.html', request, {'error': "Password too weak, please reset it."})
+            return {'error': "Password too weak, please reset it."}
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(data['sid']))
             row = await cursor.fetchone()
             await cursor.close()
             if row and row[1] != data['pwd']:
-                return aiohttp_jinja2.render_template('login.html', request, {'error': "Password wrong"})
+                return {'error': "Password wrong"}
             elif not row:
-                return aiohttp_jinja2.render_template('login.html', request, {'error': "Student Id not exist"})
+                return {'error': "Student Id not exist"}
             # elif not row:
             #     await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
             #     await db.commit()
@@ -76,29 +77,30 @@ class Http_handler:
         mail.send_verify_code(sid, verify_code)
         return web.Response(text="ok, please check your student email.")
     
-    @aiohttp_jinja2.template('resetpwd')
+    @aiohttp_jinja2.template('resetpwd.html')
     async def resetpwd(self, request):
         if request._method == "GET":
-            return aiohttp_jinja2.render_template('resetpwd.html', request, {})
+            return {}
         data = await request.post()
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}'".format(data['sid']))
             row = await cursor.fetchone()
             await cursor.close()
             if not row:
-                return aiohttp_jinja2.render_template('resetpwd.html', request, {'error': "Error: StudentId not exist."})
+                return {'error': "Error: StudentId not exist."}
             if data['sid'] in verify_map and data['verify_code'] == verify_map[data['sid']]:
                 await db.execute("UPDATE users set password='{}' where sid='{}'".format(data['newpwd'], data['sid']))
                 await db.commit()
                 del verify_map[data['sid']]
             else:
-                return aiohttp_jinja2.render_template('resetpwd.html', request, {'error': "Error: Wrong verify code."})
+                return {'error': "Error: Wrong verify code."}
             raise web.HTTPFound('/login')
     
+    @aiohttp_jinja2.template('index.html')
     async def upload(self, request):
         session = await get_session(request)
         if 'sid' not in session:
-            return aiohttp_jinja2.render_template('login.html', request, {})
+            raise web.HTTPFound('/login')
         sid = session['sid']
         reader = await request.multipart()
         field = await reader.next()
@@ -116,14 +118,13 @@ class Http_handler:
                 size += len(chunk)
                 f.write(chunk)
                 if size > 1024**2:
-                    return aiohttp_jinja2.render_template('index.html', request, {'sid': sid, 'error': "Your code can not excess 1M."})
+                    return {'sid': sid, 'error': "Your code can not excess 1M."}
 
         #test code
         code_checker = imp.load_source('CodeCheck', 'code_check.py').CodeCheck('tem_code/{}.py'.format(sid), 15)
         # code_checker = CodeCheck('tem_code/{}.py'.format(sid))
         if not code_checker.check_code():
-            return aiohttp_jinja2.render_template('index.html', request,
-                                                  {'sid': sid, 'error': code_checker.errormsg})
+            return {'sid': sid, 'error': code_checker.errormsg}
         subprocess.Popen('mv tem_code/{}.py user_code/{}.py'.format(sid, sid), shell=True)
         async with aiosqlite.connect(DB_NAME) as db:
             cursor = await db.execute("SELECT * FROM users where sid='{}' and submit_time != 0".format(sid))
@@ -135,7 +136,7 @@ class Http_handler:
                 await db.execute("update users set submit_time=CURRENT_TIMESTAMP, last_update=CURRENT_TIMESTAMP where sid='{}'".format(sid))
             await db.commit()
         await update_all_list()
-        return aiohttp_jinja2.render_template('index.html', request, {'sid': sid, 'error': "Upload success, usability test pass."})
+        return {'sid': sid, 'error': "Upload success, usability test pass."}
 
 sio = socketio.AsyncServer()
 app = web.Application()
@@ -372,14 +373,30 @@ async def go(soid, data):
 
 async def update_all_list(sid=None, data=None):
     global rank_info
-    rank_info = []
+    score_info = defaultdict(int)
     async with aiosqlite.connect(DB_NAME) as db:
-        cursor = await db.execute("select * from rank")
+        cursor = await db.execute("SELECT sid FROM users WHERE submit_time!=0")
         rows = await cursor.fetchall()
         await cursor.close()
         for row in rows:
-            rank_info.append(score(row))
-    rank_info = sorted(rank_info, key=lambda x: (x['score'],x['rand']), reverse=True)
+            score_info[row[0]] = 0
+
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute("SELECT winner, loser FROM game_log")
+        rows = await cursor.fetchall()
+        await cursor.close()
+        for row in rows:
+            winner = str(row[0])
+            loser = str(row[1])
+            if winner == loser:
+                continue
+            score_info[winner] += 5
+            if score_info[loser] >= 5:
+                score_info[loser] -= 5
+            else:
+                score_info[loser] = 0
+    rank_info = [{'sid': k, 'score': v} for k, v in score_info.items()]
+    rank_info.sort(key=lambda x: (x['score'], random.random()), reverse=True)
     await sio.emit('update_list', rank_info)
 
 @sio.on('update_list')
