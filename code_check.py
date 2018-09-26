@@ -130,3 +130,5 @@ class CodeCheck():
         chessboard[2:4, 8] = 1
         if not self.__check_result(chessboard, [[1, 8]]):
             return False
+
+        return True
