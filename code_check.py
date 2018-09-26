@@ -69,6 +69,7 @@ class CodeCheck():
             return False
         if not self.agent.candidate_list or list(self.agent.candidate_list[-1]) not in result:
             return False
+        return True
         
     def __check_simple_chessboard(self):
         if not self.__check_go(np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)):
@@ -100,17 +101,17 @@ class CodeCheck():
     def __check_advance_chessboard (self):
         # 冲5
         chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
-        chessboard[0, 0:5] = -1
-        chessboard[1, 0:5] = 1
-        if not self.__check_result(chessboard, [[0, 5]]):
+        chessboard[0, 0:4] = -1
+        chessboard[1, 0:4] = 1
+        if not self.__check_result(chessboard, [[0, 4]]):
             return False
         
         # 防守冲5
         chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
-        chessboard[0, 0:4] = -1
+        chessboard[0, 0:3] = -1
         chessboard[0, 7] = -1
-        chessboard[1, 0:5] = 1
-        if not self.__check_result(chessboard, [[1, 5]]):
+        chessboard[1, 0:4] = 1
+        if not self.__check_result(chessboard, [[1, 4]]):
             return False
         
         # 三三
