@@ -6,6 +6,7 @@ import os
 import random
 import subprocess
 import time
+from collections import defaultdict
 
 import aiohttp_jinja2
 import aiosqlite
@@ -160,8 +161,8 @@ setup(app, EncryptedCookieStorage(secret_key))
 rank_info = []
 score_info = {}
 max_game_id = 0
-games = {}
-players = {}
+games = defaultdict(dict)
+players = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
 def score(row):
     sid = row[0]
@@ -179,8 +180,7 @@ def find_rank(sid):
 async def add_game_log (white, black):
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute("insert into game_log(white_sid, black_sid, start_time, end_time, winner, loser) "
-                                  "values('{}', '{}', datetime({}, 'unixepoch', 'localtime'), 0, 0, 0)".format(white, black,
-                                                                                                           int(time.time())))
+                                  "values(?, ?, datetime(?, 'unixepoch', 'localtime'), 0, 0, 0)", [white, black, int(time.time())])
         await db.commit()
         id = cursor.lastrowid
         await cursor.close()
@@ -190,8 +190,7 @@ async def update_game_log (game_id, winner, loser):
     # print("update_game_log", game_id, winner, loser)
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
-            "update game_log set winner='{}', loser='{}', end_time=datetime({}, 'unixepoch', 'localtime') where id={}".format(
-                winner, loser, int(time.time()), game_id))
+            "update game_log set winner=?, loser=?, end_time=datetime(?, 'unixepoch', 'localtime') where id=?", [winner, loser, int(time.time()), game_id])
         await db.commit()
     # print("update_game_log success")
 
@@ -202,7 +201,12 @@ async def update_chess_log (game_id):
                              games[game_id]['chess_log'])
         await db.commit()
     # print("update_chess_log success")
-    
+
+
+async def push_game (player, tag, soid=None):
+    await sio.emit('push_game', games[players[player][tag]['id']], room=soid if soid else player + str(tag))
+
+
 @sio.on('connect')
 async def connect(soid, environ):
     print("connect ", soid)
@@ -211,17 +215,15 @@ async def connect(soid, environ):
 async def message (soid, msg):
     print(soid, "msg ", msg)
 
-async def push_game(player, soid=None):
-    if player in players:
-        await sio.emit('push_game', games[players[player]], room=soid if soid else player)
-        
+
 @sio.on('watch')
-async def message(soid, room):
-    room = str(room)
+async def watch (soid, data):
+    player = str(data['player'])
+    tag = int(data['tag'])
     if len(sio.rooms(soid)) > 1:
         sio.leave_room(soid, sio.rooms(soid)[1])
-    sio.enter_room(soid, room)
-    await push_game(room, soid)
+    sio.enter_room(soid, player + str(tag))
+    await push_game(player, tag, soid)
 
 @sio.on('self_play')
 async def self_play(soid, data):
@@ -230,151 +232,168 @@ async def self_play(soid, data):
         return
     player = str(data['player'])
     AI = str(data['AI'])
-    color = int(data['color'])
-    print(player, 'self_play')
-    if player in players:
-        await sio.emit('error', {'type': 1, 'info': "You are in an unfinished game."}, soid)
-    else:
-        idx = find_rank(AI)
-        if idx == -1:
-            await sio.emit('error', {'type': 3, 'info': "No valid code."}, soid)
-            return
-        if color == 1:
-            await self_begin(player, AI, 'human-' + player)
-        else:
-            await self_begin(player, 'human-' + player, AI)
+    tag = int(data['tag'])
+    print(player, 'self_play', AI)
+    if players[player][tag]['status']:
+        await error_finish(soid, {'player': player, 'tag': tag, 'new_game': 1})
 
-async def self_begin(player, white, black):
-    game_id = 0
+    idx = find_rank(AI)
+    if idx == -1:
+        await sio.emit('error', {'type': 3, 'info': "No valid code."}, soid)
+        return
+    if tag > 0:
+        await self_begin(player, tag, AI, 'human-' + player)
+    else:
+        await self_begin(player, tag, 'human-' + player, AI)
+
+
+async def self_begin (player, tag, white, black):
+    old_game_id = players[player][tag]['id']
+    if old_game_id in games:
+        del games[old_game_id]
+    
+    game_id = 1000000
     while game_id in games:
         game_id = random.randint(1000000, 10000000)
-    print("self_begin", white, black, game_id)
-    players[player] = game_id
+    players[player][tag]['id'] = game_id
+    players[player][tag]['status'] = 1
     games[game_id] = {'white': white, 'black': black, "chess_log": []}
-    await push_game(player)
-    subprocess.Popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player), stdout=open('output_god', 'w+'), stderr=open('error_god', 'w+'), shell=True)
+    await push_game(player, tag)
+    print(white, black, player, tag)
+    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=open('output_god', 'w+'), stderr=open('error_god', 'w+'), shell=True)
     
 @sio.on('self_register')
-async def self_register(soid, player):
-    print('register',player,soid)
-    player = str(player)
-    if player in players:
-        game_id = players[player]
+async def self_register (soid, data):
+    player = str(data[0])
+    tag = int(data[1])
+    print('register', player, tag, soid)
+    if players[player][tag]['status']:
+        game_id = players[player][tag]['id']
         games[game_id]['god'] = soid
-        await sio.emit('register', 0, room=player)
+        await sio.emit('register', 0, room=player + str(tag))
 
 @sio.on('self_go')
-async def self_go(soid, data):  #data[player1, x, y, color]
+async def self_go (soid, data):  # data[player1, tag, x, y, color]
     player = str(data[0])
-    if player in players:
+    tag = int(data[1])
+    if players[player][tag]['status']:
         # print(data)
-        game_id = players[player]
-        games[game_id]['chess_log'].append((game_id, data[1], data[2], data[3], int(time.time())))
+        game_id = players[player][tag]['id']
+        games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4], int(time.time())))
         god = games[game_id]['god']
-        await sio.emit('self_go', data[1:], god)
-        await sio.emit('go', data[1:], room=player)
+        await sio.emit('self_go', data[2:], god)
+        await sio.emit('go', data[2:], room=player + str(tag))
 
 @sio.on('self_finish')
-async def self_finish (soid, data):
-    if data[0] in players:
-        game_id = players[data[0]]
-        del games[game_id]
-        del players[data[0]]
-        await sio.emit('finish', data[1], room=data[0])
-        time.sleep(0.2)
+async def self_finish (soid, data):  # data[player, tag, winner, loser]
+    player = str(data[0])
+    tag = int(data[1])
+    if players[player][tag]['status']:
+        game_id = players[player][tag]['id']
+        games[game_id]['winner'] = data[2]
+        players[player][tag]['status'] = 0
+        await sio.emit('finish', data[1], room=player + str(tag))
         
 @sio.on('play')
-async def play(soid, player):
+async def play (soid, data):
     if not downinfo['can_play']:
         await sio.emit('error', {'type': 3, 'info': downinfo['message']}, soid)
         return
-    player = str(player)
-    print(player, "play")
-    if player in players:
-        await sio.emit('error', {'type': 1, 'info': "You are in an unfinished game."}, soid)
+    player = str(data['player'])
+    tag = int(data['tag'])
+    print(player, "play", tag)
+    if players[player][tag]['status']:
+        await error_finish(soid, {'player': player, 'tag': tag, 'new_game': 1})
+
+    idx = find_rank(player)
+    if idx == -1:
+        await sio.emit('error', {'type': 3, 'info': "You have not uploaded user_code."}, soid)
+        return
+    elif idx == 0:
+        player2 = player
     else:
-        idx = find_rank(player)
-        if idx == -1:
-            await sio.emit('error', {'type': 3, 'info': "You have not uploaded user_code."}, soid)
-            return
-        elif idx == 0:
-            player2 = player
-        else:
-            player2 = rank_info[idx-1]['sid']
-        player1 = player
-        if random.random() > 0.5:
-            await begin(player, player1, player2)
-        else:
-            await begin(player, player2, player1)
-        # await begin(player2, player1)
-    
-async def begin(player1, white, black):
+        player2 = rank_info[idx - 1]['sid']
+    player1 = player
+    if tag > 0:
+        await begin(player, tag, player1, player2)
+    else:
+        await begin(player, tag, player2, player1)
+    # await begin(player2, player1)
+
+
+async def begin (player, tag, white, black):
+    old_game_id = players[player][tag]['id']
+    if old_game_id in games:
+        del games[old_game_id]
+        
     game_id = await add_game_log(white, black)
     print("begin", white, black, game_id)
-    players[player1] = game_id
+    players[player][tag]['id'] = game_id
+    players[player][tag]['status'] = 1
     games[game_id] = {'white': white, 'black': black, "chess_log": []}
-    await push_game(player1)
-    subprocess.Popen('python god.py user_code {} {} {} {} {}'.format(white, black, 15, 1, player1), stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'), shell=True)
+    await push_game(player, tag)
+    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'), shell=True)
 
 @sio.on('go')
-async def go(soid, data):  #data[player1, 0, x, y, color]
-    # print("go", data)
-    if data[0] in players:
-        game_id = players[data[0]]
-        games[game_id]['chess_log'].append((game_id, data[1], data[2], data[3], int(time.time())))
-        await sio.emit('go', data[1:], room=data[0])
+async def go (soid, data):  # data[player, tag, x, y, color]
+    player = str(data[0])
+    tag = int(data[1])
+    if players[player][tag]['status']:
+        game_id = players[player][tag]['id']
+        games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4], int(time.time())))
+        await sio.emit('go', data[2:], room=player + str(tag))
         
 @sio.on('finish')
-async def finish(soid, data):
-    if data[0] in players:
-        game_id = players[data[0]]
-        await update_game_log(game_id, data[1], data[2])
+async def finish (soid, data):  # data[player, tag, winner, loser]
+    player = str(data[0])
+    tag = int(data[1])
+    if players[player][tag]['status']:
+        game_id = players[player][tag]['id']
+        await update_game_log(game_id, data[2], data[3])
         # await update_chess_log(game_id)
         await update_all_list()
         if 'god' in games[game_id]:
             await sio.emit('finish', 0, games[game_id]['god'])
-        del games[game_id]
-        del players[data[0]]
-        await sio.emit('finish', data[1], room=data[0])
-        time.sleep(0.2)
+        games[game_id]['winner'] = data[2]
+        players[player][tag]['status'] = 0
+        await sio.emit('finish', data[1], room=player + str(tag))
         
 @sio.on('error_finish')
-async def error_finish(soid, player):
-    player = str(player)
-    if player in players:
-        game_id = players[player]
+async def error_finish (soid, data):
+    player = str(data['player'])
+    tag = int(data['tag'])
+    if players[player][tag]['status']:
+        game_id = players[player][tag]['id']
         await update_game_log(game_id, 0, 0)
-        # await update_chess_log(game_id)
-        # await update_all_list()
         if 'god' in games[game_id]:
             await sio.emit('finish', 0, games[game_id]['god'])
-        del games[game_id]
-        del players[player]
-        await sio.emit('error_finish', 0, room=player)
+        games[game_id]['winner'] = 0
+        players[player][tag]['status'] = 0
+        if 'new_game' not in data:
+            await sio.emit('error_finish', 0, room=player + str(tag))
 
 @sio.on('error')
-async def error(soid, data):
-    await sio.emit('error', {'type': 2, 'info': data[1]}, room=data[0])
-
-@sio.on('check_games')
-async def check_games (soid, data):
-    await sio.emit('check_games', games, soid)
-    
-@sio.on('downtime')
-async def downtime (soid, data):
-    downinfo['can_play'] = data['can_play']
-    downinfo['message'] = data['message']
-    await sio.emit('error', {'type': 3, 'info': data['message']})
-
-@sio.on('test_go')
-async def go(soid, data):
-    print("test_go", data)
-    game_id = players[data[0]]
-    await sio.emit('go', data[1:], room=games[game_id]['white'])
-    await sio.emit('go', data[1:], room=games[game_id]['black'])
+async def error (soid, data):  # data[player, tag, msg]
+    await sio.emit('error', {'type': 2, 'info': data[2]}, room=str(data[0]) + str(data[1]))
 
 
-async def update_all_list(sid=None, data=None):
+@sio.on('order')
+async def order (soid, data):
+    order = data['order']
+    params = data['params']
+    if order == 'down':
+        downinfo['can_play'] = params['can_play']
+        downinfo['message'] = params['message']
+        await sio.emit('error', {'type': 3, 'info': data['message']})
+    elif order == 'check_games':
+        await sio.emit('check_games', games, soid)
+    elif order == 'update_rank':
+        global max_game_id
+        max_game_id = 0
+        await update_all_list()
+
+
+async def update_all_list ():
     global rank_info, score_info, max_game_id
     
     async with aiosqlite.connect(DB_NAME) as db:

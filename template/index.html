@@ -157,7 +157,9 @@
               </p>
             </div>
             <div class="col-md-6">
-              <canvas id="chessboard"></canvas>
+                <button class="tag" data-id="1">黑</button>
+                <button class="tag" data-id="-1">白</button>
+                <canvas id="chessboard" data-id="1"></canvas>
             </div>
             <div class="col-md-3">
               <table id="rank_table" class="table table-hover" style="font-size:.8em!important;padding:0%;z-index:5;border-collapse: separate;border-radius: 8px;">
@@ -243,6 +245,7 @@
       });
 
     });
+
   </script>
   <a href="#" id="home" style="display: block;"> <span id="toTopHover" style="opacity: 1;"> </span></a>
 

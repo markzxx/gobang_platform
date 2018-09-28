@@ -76,9 +76,8 @@ def deal_with_memory_out(size):
                 god.color_user_map[-1]) + " use " + str(int(black_mem)) + " MB."
             # print("winner: ",god.color_user_map[0])
 
-
-    finish_data=(player, winner, failer)
-    socketIO.emit("error",[player,memory_message] )
+    finish_data = begin_data + [winner, failer]
+    socketIO.emit("error", [player, memory_message])
     socketIO.emit("finish", finish_data)
     socketIO.wait(seconds=1)
     socketIO.disconnect()
@@ -109,19 +108,19 @@ class Namespace(BaseNamespace):
         if not god.finish:
             god.update(-data[2])
             if not god.error:
-                go_data = [god.player, god.last_pos[0], god.last_pos[1], -data[2]]
-                socketIO.emit("go", deal_go_data(go_data))
+                go_data = god.begin + deal_go_data([god.last_pos[0], god.last_pos[1], -data[2]])
+                socketIO.emit("go", go_data)
         if god.finish:
             if god.error:
-                error_data = (god.player, god.error)
+                error_data = god.begin + [god.error]
                 socketIO.emit("error", error_data)
-            finish_data = (god.player, god.color_user_map[god.winner], god.color_user_map[-god.winner])
+            finish_data = god.begin + [god.color_user_map[god.winner], god.color_user_map[-god.winner]]
             socketIO.emit("self_finish", finish_data)
             socketIO.wait(seconds=1)
             socketIO.disconnect()
 
 class God(object):
-    def __init__(self, file_dic, player, white, black, chessboard_size, time_out):
+    def __init__ (self, file_dic, player, tag, white, black, chessboard_size, time_out):
 
         self.chessboard_size = chessboard_size
         self.time_out = time_out
@@ -130,6 +129,8 @@ class God(object):
         self.winner = 0
         self.last_pos = (-1, -1)
         self.player = player
+        self.tag = tag
+        self.begin = [player, tag]
         white_path = os.path.join(file_dic, white + '.py')
         black_path = os.path.join(file_dic, black + '.py')
         if 'human' not in white:
@@ -267,35 +268,25 @@ class God(object):
             self.error += " Dear " + wrong_play + ": Memory out"
             self.winner = self.user_color_map[winner_play]
 
-def self_fight(file_dic, white, black, size, time_interval, player):
 
-    begin_data = player
-
-    AI_color = 1 if 'human' not in white else -1
-    socketIO.emit("self_register", player)
-    
-    if AI_color == -1:
+def self_fight (first, begin_data):
+    if first:
         #Black chess go first step
-        god.update(AI_color)
+        god.update(-1)
         if not god.finish:
-            go_data = [begin_data, god.last_pos[0], god.last_pos[1], AI_color]
-            socketIO.emit("go", deal_go_data(go_data))
+            go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], -1])
+            socketIO.emit("go", go_data)
     
     if god.error:
-        error_data = (begin_data, god.error)
+        error_data = begin_data + [god.error]
         socketIO.emit("error", error_data)
-        finish_data = (begin_data, god.color_user_map[god.winner], god.color_user_map[-god.winner])
+        finish_data = begin_data + [god.color_user_map[god.winner], god.color_user_map[-god.winner]]
         socketIO.emit("finish", finish_data)
         # print(error_data)
-        
 
-def fight(file_dic, white, black, size, time_interval, player):
 
-    #begin_data = god.begin
-    begin_data = player
-
-    tem_color = -1
-    while not god.finish:
+def fight (begin_data):
+    while True:
         #--------------------------------
         tem_color = -1
         player_now[0] = tem_color
@@ -309,8 +300,8 @@ def fight(file_dic, white, black, size, time_interval, player):
         player_memory[tem_color] = tem_mem + after_step_memory - memory_usage
 
         if god.finish: break
-        go_data = [begin_data, god.last_pos[0], god.last_pos[1], tem_color]
-        socketIO.emit("go", deal_go_data(go_data))
+        go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
+        socketIO.emit("go", go_data)
         #print(go_data)
 
         #--------------------------------
@@ -326,28 +317,28 @@ def fight(file_dic, white, black, size, time_interval, player):
         player_memory[tem_color] = tem_mem + after_step_memory - memory_usage
 
         if god.finish: break
-        go_data = [begin_data, god.last_pos[0], god.last_pos[1], tem_color]
-        socketIO.emit("go", deal_go_data(go_data))
+        go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
+        socketIO.emit("go", go_data)
         #print(go_data)
 
     if god.error:
-        error_data = (begin_data, god.error)
+        error_data = begin_data + [god.error]
         socketIO.emit("error", error_data)
         #print(error_data)
     else:
-        go_data = [begin_data, god.last_pos[0], god.last_pos[1], tem_color]
+        go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
         #print(go_data)
-        socketIO.emit("go", deal_go_data(go_data))
-
-    finish_data = (begin_data, god.color_user_map[god.winner], god.color_user_map[-god.winner])
+        socketIO.emit("go", go_data)
+    
+    finish_data = begin_data + [god.color_user_map[god.winner], god.color_user_map[-god.winner]]
     socketIO.emit("finish", finish_data)
 
 
 
 if __name__ == '__main__':
     def deal_go_data(go_data):
-        for i in range(1,4):
-            go_data[i] = int(go_data[i])
+        for i, g in enumerate(go_data):
+            go_data[i] = int(g)
         return go_data
 
     socketIO = SocketIO('localhost', 8080, Namespace)
@@ -359,22 +350,26 @@ if __name__ == '__main__':
     size = int(arg_list[4])
     time_interval = float(arg_list[5])
     player = arg_list[6]
+    tag = arg_list[7]
 
     memory_size = 100 * 1024 ** 2  # In bytes
-    god = God(file_dic, player, white, black, size, time_interval)
+    god = God(file_dic, player, tag, white, black, size, time_interval)
+    begin_data = [player, tag]
 
     try:
         if 'human' in white or 'human' in black:
-            self_fight(file_dic, white, black, size, time_interval, player)
+            first = False if 'human' in black else True
+            socketIO.emit("self_register", begin_data)
+            self_fight(first, begin_data)
         else:
             control_thread = threading.Thread(target=control)
             control_thread.start()
-            fight(file_dic, white, black, size, time_interval, player)
+            fight(begin_data)
 
 
     except Exception:
-        socketIO.emit("error", [player, traceback.format_exc()])
-        finish_data = (player, 0, 0)
+        socketIO.emit("error", begin_data + [traceback.format_exc()])
+        finish_data = begin_data + [0, 0]
         socketIO.emit("finish", finish_data)
 
     if god.finish:
@@ -386,5 +381,5 @@ if __name__ == '__main__':
         socketIO.disconnect()
 
     socketIO.wait(600)
-    socketIO.emit("finish", (player, 0, 0))
-    socketIO.wait(1)
+    socketIO.emit("finish", begin_data + [0, 0])
+    socketIO.wait(0.1)

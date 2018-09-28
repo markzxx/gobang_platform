@@ -29,8 +29,7 @@ async def init_db():
             "create table game_log "
             "(id INTEGER primary key autoincrement, white_sid varchar(12), black_sid varchar(12), start_time time,"
             "end_time time, winner varchar(12), loser varchar(12), "
-            "FOREIGN KEY(white_sid) REFERENCES users(sid), FOREIGN KEY(black_sid) REFERENCES users(sid),"
-            "UNIQUE(white_sid, black_sid, start_time))"
+            "FOREIGN KEY(white_sid) REFERENCES users(sid), FOREIGN KEY(black_sid) REFERENCES users(sid))"
         )
         
         # test_game_log = [(123, 789, 123, 789), (123, 789, 123, 789), (456, 798, 456, 798), (798, 456, 0, 0)]
