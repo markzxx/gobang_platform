@@ -5,7 +5,6 @@ import imp
 import os
 import random
 import subprocess
-import time
 from collections import defaultdict
 
 import aiohttp_jinja2
@@ -249,10 +248,10 @@ async def self_begin (player, tag, white, black):
     
     game_id = 1000000
     while game_id in games:
-        game_id = random.randint(1000000, 10000000)
+        game_id = random.randint(10 ** 10, 2 * 10 ** 10)
     players[player][tag]['id'] = game_id
     players[player][tag]['status'] = 1
-    games[game_id] = {'white': white, 'black': black, "chess_log": []}
+    games[game_id] = {'white': white, 'black': black, "chess_log": [], "type": 2}
     await push_game(player, tag)
     print(white, black, player, tag)
     subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'), shell=True)
@@ -325,7 +324,7 @@ async def begin (player, tag, white, black):
     print("begin", white, black, game_id)
     players[player][tag]['id'] = game_id
     players[player][tag]['status'] = 1
-    games[game_id] = {'white': white, 'black': black, "chess_log": []}
+    games[game_id] = {'white': white, 'black': black, "chess_log": [], "type": 1}
     await push_game(player, tag)
     subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'), shell=True)
 
@@ -335,7 +334,7 @@ async def go (soid, data):  # data[player, tag, x, y, color]
     tag = int(data[1])
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
-        games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4], int(time.time())))
+        games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4]))
         await sio.emit('go', data[2:], room=player + str(tag))
         
 @sio.on('finish')
@@ -345,7 +344,6 @@ async def finish (soid, data):  # data[player, tag, winner, loser]
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
         await update_game_log(game_id, data[2], data[3])
-        # await update_chess_log(game_id)
         await update_all_list()
         if 'god' in games[game_id]:
             await sio.emit('finish', 0, games[game_id]['god'])
@@ -359,7 +357,8 @@ async def error_finish (soid, data):
     tag = int(data['tag'])
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
-        await update_game_log(game_id, 0, 0)
+        if games[game_id]['type'] == 1:
+            await update_game_log(game_id, 0, 0)
         if 'god' in games[game_id]:
             await sio.emit('finish', 0, games[game_id]['god'])
         games[game_id]['winner'] = 0
