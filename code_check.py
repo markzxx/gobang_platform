@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 check the security and functionability of uploaded code 
-- forbid from importing os (although not a good way compared to sandbox)
-- scanning for 'import os' and 'exec'
+- forbid from importing os
 - random chessboard check
+- some special case check
 """
 import imp
 import traceback
@@ -19,23 +19,29 @@ class CodeCheck():
         self.script_file_path = script_file_path
         self.chessboard_size = chessboard_size
         self.agent = None
-        self.test_color = -1
         self.errormsg = 'Error'
         # print(self.chessboard)
-        
-    
+
+    # Call this function and get True or False, self.errormsg has the massage
     def check_code(self):
+        # check if contains forbidden library
         if self.__check_forbidden_import() == False:
             return False
+    
+        # check initialization
         try:
             self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, 1, self.time_out)
             self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, -1, self.time_out)
         except Exception:
             self.errormsg = "Fail to init"
             return False
+    
+        # check simple condition
         if not self.__check_simple_chessboard():
             self.errormsg = "Can not pass usability test."
             return False
+    
+        # check advance condition, online test contain more test case than this demo
         if not self.__check_advance_chessboard():
             self.errormsg = "Your code is too weak, fail to pass base test."
             return False
@@ -43,11 +49,7 @@ class CodeCheck():
 
 
     def __check_forbidden_import(self):
-        '''
-        :return 1: ok
-        :return 0: import error 
-        '''
-        with open(self.script_file_path, 'r') as myfile:
+        with open(self.script_file_path, 'r', encoding='UTF-8') as myfile:
             data = myfile.read()
             for keyword in FORBIDDEN_LIST:
                 idx = data.find(keyword)
@@ -72,49 +74,38 @@ class CodeCheck():
         return True
         
     def __check_simple_chessboard(self):
+        # empty chessboard
         if not self.__check_go(np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)):
             return False
     
-        tmp0 = [1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1]
-        tmp1 = np.stack([tmp0] * 3)
-        tmp2 = -tmp1
-        chessboard = np.concatenate([tmp1, tmp2, tmp1, tmp2, tmp1], axis=0)
-        idx = np.random.choice(15 * 15, 10)
-        chessboard = np.reshape(chessboard, [15 * 15])
-        chessboard[idx] = 0
-        chessboard = np.reshape(chessboard, [15, 15])
+        # only one empty position remain
+        chessboard = np.ones((self.chessboard_size, self.chessboard_size))
+        chessboard[:, ::2] = -1
+        for i in range(0, self.chessboard_size, 4):
+            chessboard[i] = -chessboard[i]
+        x, y = np.random.choice(self.chessboard_size, 2)
+        chessboard[x, y] = 0
     
-        if not self.__check_go(chessboard):
-            return False
-    
-        ## check validity
-        try:
-            if chessboard[self.agent.candidate_list[-1]] == 0:
-                return True
-            else:
-                return False
-        except ValueError:
-            return False
-        except IndexError:
+        if not self.__check_result(chessboard, [[x, y]]):
             return False
     
     def __check_advance_chessboard (self):
-        # 冲5
+        # win
         chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
         chessboard[0, 0:4] = -1
         chessboard[1, 0:4] = 1
         if not self.__check_result(chessboard, [[0, 4]]):
             return False
-        
-        # 防守冲5
+    
+        # defense 5 inline
         chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
         chessboard[0, 0:3] = -1
         chessboard[0, 7] = -1
         chessboard[1, 0:4] = 1
         if not self.__check_result(chessboard, [[1, 4]]):
             return False
-        
-        # 三三
+    
+        # two three
         chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
         chessboard[1, 1:3] = -1
         chessboard[2:4, 3] = -1
@@ -122,8 +113,8 @@ class CodeCheck():
         chessboard[2:4, 8] = 1
         if not self.__check_result(chessboard, [[1, 3]]):
             return False
-        
-        # 防守三三
+    
+        # defense
         chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
         chessboard[1, 0:2] = -1
         chessboard[2:4, 2] = -1
