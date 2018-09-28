@@ -364,6 +364,7 @@ async def error_finish (soid, data):
         games[game_id]['winner'] = 0
         players[player][tag]['status'] = 0
         if 'new_game' not in data:
+            print('error')
             await sio.emit('error_finish', 0, room=player + str(tag))
 
 @sio.on('error')

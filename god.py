@@ -381,5 +381,5 @@ if __name__ == '__main__':
         socketIO.disconnect()
 
     socketIO.wait(600)
-    socketIO.emit("finish", begin_data + [0, 0])
-    socketIO.wait(0.1)
+    # socketIO.emit("finish", begin_data + [0, 0])
+    # socketIO.wait(0.1)

@@ -470,7 +470,6 @@ function handlebarsUserList(userList) {
         playWith($(this).attr('id'));
     });
     $('.user-status').addClass('gaming-status');
-
     watch();
 }
 
