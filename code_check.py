@@ -88,6 +88,8 @@ class CodeCheck():
     
         if not self.__check_result(chessboard, [[x, y]]):
             return False
+
+        return True
     
     def __check_advance_chessboard (self):
         # win
