@@ -255,7 +255,7 @@ async def self_begin (player, tag, white, black):
     games[game_id] = {'white': white, 'black': black, "chess_log": []}
     await push_game(player, tag)
     print(white, black, player, tag)
-    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=open('output_god', 'w+'), stderr=open('error_god', 'w+'), shell=True)
+    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'), shell=True)
     
 @sio.on('self_register')
 async def self_register (soid, data):

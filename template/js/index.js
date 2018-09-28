@@ -215,6 +215,7 @@ function bindButtonClick(socket) {
         $(".user-status").attr("disabled", "disabled");
         var player = $('#sid').data('id');
         socket.emit('play', {'player': player, 'tag': 1});
+        for (var i = 0; i < 1000; i++) ;
         socket.emit('play', {'player': player, 'tag': -1});
     });
 
