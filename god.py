@@ -291,7 +291,7 @@ def self_fight (first, begin_data):
         error_data = begin_data + [god.error]
         socketIO.emit("error", error_data)
         finish_data = begin_data + [god.color_user_map[god.winner], god.color_user_map[-god.winner]]
-        socketIO.emit("finish", finish_data)
+        socketIO.emit("self_finish", finish_data)
         # print(error_data)
 
 
