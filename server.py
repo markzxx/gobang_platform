@@ -379,7 +379,7 @@ async def order (soid, data):
     if order == 'down':
         downinfo['can_play'] = params['can_play']
         downinfo['message'] = params['message']
-        await sio.emit('error', {'type': 3, 'info': data['message']})
+        await sio.emit('error', {'type': 3, 'info': params['message']})
     elif order == 'check_games':
         await sio.emit('check_games', games, soid)
     elif order == 'update_rank':
