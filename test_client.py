@@ -20,7 +20,7 @@ socketIO = SocketIO('10.20.96.148', 8080, Namespace)
 
 for i in range(100, 0, -1):
     socketIO.emit('play', {'player': 11210162, 'tag': i})
-    sleep(0.01)
+    sleep(0.1)
     socketIO.emit('play', {'player': 11210162, 'tag': -i})
 
 socketIO.wait()

@@ -431,10 +431,9 @@ async def update_one_list(soid, data):
 def disconnect(soid):
     print('disconnect ', soid)
 
-
 async def init_pool ():
     global pool
-    pool = await aiomysql.create_pool(host='10.20.13.19', port=3306, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True)
+    pool = await aiomysql.create_pool(host='10.20.13.19', port=3306, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True, minsize=1, maxsize=100)
     await update_all_list()
     
 if __name__ == '__main__':
