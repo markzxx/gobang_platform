@@ -254,7 +254,7 @@ async def self_begin (player, tag, white, black):
     games[game_id] = {'white': white, 'black': black, "chess_log": [], "type": 2}
     await push_game(player, tag)
     print(white, black, player, tag)
-    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'), shell=True)
+    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
     
 @sio.on('self_register')
 async def self_register (soid, data):
@@ -326,7 +326,7 @@ async def begin (player, tag, white, black):
     players[player][tag]['status'] = 1
     games[game_id] = {'white': white, 'black': black, "chess_log": [], "type": 1}
     await push_game(player, tag)
-    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'), shell=True)
+    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
 
 @sio.on('go')
 async def go (soid, data):  # data[player, tag, x, y, color]
