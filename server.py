@@ -341,7 +341,7 @@ async def go (soid, data):  # data[player, tag, x, y, color]
 async def finish (soid, data):  # data[player, tag, winner, loser]
     player = str(data[0])
     tag = int(data[1])
-    print(data)
+    print('finish', data)
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
         await update_game_log(game_id, data[2], data[3])

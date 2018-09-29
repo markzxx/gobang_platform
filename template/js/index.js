@@ -97,15 +97,17 @@ function clientSocket(socket) {
 
     socket.on('push_game', function (gameInfo) {
         drawChessBoard();
-        if (!gameInfo.chess_log)
-            return;
+
         chess_log = [];
 
-        $.each(gameInfo.chess_log, function (index, value) {
-            // console.log(value);
-            drawNewPiece(value[1], value[2], value[3] == -1);
-            chess_log.push([value[1], value[2], value[3]]);
-        });
+        if (!gameInfo.chess_log) {
+            $.each(gameInfo.chess_log, function (index, value) {
+                // console.log(value);
+                drawNewPiece(value[1], value[2], value[3] == -1);
+                chess_log.push([value[1], value[2], value[3]]);
+            });
+        }
+
         $('#player-status1').text(gameInfo.white);
         $('#player-status2').text(gameInfo.black);
         if ('winner' in gameInfo) {
@@ -119,7 +121,7 @@ function clientSocket(socket) {
                 setGameStatus('Game finished, ' + gameInfo['winner'] + ' WIN！');
         } else {
             setGameStatus('Game Begin');
-            $('.range').attr("disabled", "disabled");
+            $('.record').attr("disabled", "disabled");
         }
     });
 
@@ -203,7 +205,6 @@ function playWith(sid) {
         switchStatus(all_bnt, 'play', 'gaming-status');
         switchStatus(bnt, 'stop', 'gaming-stop');
         all_bnt.attr("disabled", "disabled");
-        $('.record').attr("disabled", "disabled");
         IS_BLACK = tag > 0;
         if (IS_BLACK)
             IS_CAN_STEP = true;
