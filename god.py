@@ -352,7 +352,7 @@ if __name__ == '__main__':
         return go_data
 
     socketIO = SocketIO('localhost', 8080, Namespace)
-
+    sys.stdout = open(os.devnull, 'w')
     arg_list = sys.argv
     file_dic = arg_list[1]
     white = arg_list[2]
