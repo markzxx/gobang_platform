@@ -99,7 +99,7 @@ function clientSocket(socket) {
         drawChessBoard();
         chess_log = [];
         console.log(gameInfo);
-        if (!gameInfo.chess_log) {
+        if (gameInfo.chess_log) {
             $.each(gameInfo.chess_log, function (index, value) {
                 // console.log(value);
                 drawNewPiece(value[1], value[2], value[3] == -1);

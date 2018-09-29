@@ -286,7 +286,7 @@ async def self_finish (soid, data):  # data[player, tag, winner, loser]
         game_id = players[player][tag]['id']
         games[game_id]['winner'] = data[2]
         players[player][tag]['status'] = 0
-        await sio.emit('finish', data[1], room=player + str(tag))
+        await sio.emit('finish', data[2], room=player + str(tag))
         
 @sio.on('play')
 async def play (soid, data):
