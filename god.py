@@ -373,13 +373,15 @@ if __name__ == '__main__':
         socketIO.emit("finish", finish_data)
 
     if god.finish:
-        try:
-            stop_thread(control_thread)
-        except Exception:
-            print(traceback.format_exc())
-        socketIO.wait(seconds=1)
+        while True:
+            try:
+                stop_thread(control_thread)
+                break
+            except Exception:
+                print(traceback.format_exc())
         socketIO.disconnect()
+        socketIO.wait(seconds=1)
 
-    socketIO.wait(600)
-    # socketIO.emit("finish", begin_data + [0, 0])
-    # socketIO.wait(0.1)
+    socketIO.wait(seconds=600)
+    socketIO.emit("self_finish", begin_data + [0, 0])
+    socketIO.wait(seconds=1)
