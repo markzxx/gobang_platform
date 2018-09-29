@@ -121,7 +121,8 @@ class Namespace(BaseNamespace):
 
 class God(object):
     def __init__ (self, file_dic, player, tag, white, black, chessboard_size, time_out):
-
+    
+        self.error = ""
         self.chessboard_size = chessboard_size
         self.time_out = time_out
         self.chessboard = np.zeros((chessboard_size, chessboard_size), dtype=np.int)
@@ -133,14 +134,23 @@ class God(object):
         self.begin = [player, tag]
         white_path = os.path.join(file_dic, white + '.py')
         black_path = os.path.join(file_dic, black + '.py')
-        if 'human' not in white:
-            self.white = imp.load_source('AI', white_path).AI(self.chessboard_size, 1, self.time_out)
-        if 'human' not in black:
-            self.black = imp.load_source('AI', black_path).AI(self.chessboard_size, -1, self.time_out)
+        try:
+            if 'human' not in white:
+                self.white = imp.load_source('AI', white_path).AI(self.chessboard_size, 1, self.time_out)
+        except Exception:
+            self.finish = True
+            self.error = traceback.format_exc()
+            self.winner = -1
+    
+        try:
+            if 'human' not in black:
+                self.black = imp.load_source('AI', black_path).AI(self.chessboard_size, -1, self.time_out)
+        except Exception:
+            self.finish = True
+            self.error = traceback.format_exc()
+            self.winner = 1
         self.user_color_map = {white: 1, black: -1}
         self.color_user_map = {1: white, -1: black, 0: 0}
-        self.error = ""
-
 
     def check_chess(self, pos, color):
         if pos[0]<0 or pos[0]>=self.chessboard_size or pos[1]<0 or pos[1]>=self.chessboard_size:
