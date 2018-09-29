@@ -357,6 +357,7 @@ async def error_finish (soid, data):
     player = str(data['player'])
     tag = int(data['tag'])
     if players[player][tag]['status']:
+        print(data)
         game_id = players[player][tag]['id']
         if games[game_id]['type'] == 1:
             await update_game_log(game_id, 0, 0)

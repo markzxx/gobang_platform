@@ -97,9 +97,8 @@ function clientSocket(socket) {
 
     socket.on('push_game', function (gameInfo) {
         drawChessBoard();
-
         chess_log = [];
-
+        console.log(gameInfo);
         if (!gameInfo.chess_log) {
             $.each(gameInfo.chess_log, function (index, value) {
                 // console.log(value);
@@ -137,6 +136,7 @@ function clientSocket(socket) {
     });
 
     socket.on('finish', function (winner) {
+        console.log('finish', winner);
         $('#range').attr('max', chess_log.length);
         $('#range').val(chess_log.length);
         $('#range_num').val(chess_log.length);
@@ -149,6 +149,7 @@ function clientSocket(socket) {
     });
 
     socket.on('error_finish', function (winner) {
+        console.log('error_finish', winner);
         drawChessBoard();
         setGameStatus('Game error finished!');
         stopSelfPlay();
