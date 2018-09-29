@@ -349,7 +349,7 @@ async def finish (soid, data):  # data[player, tag, winner, loser]
             await sio.emit('finish', 0, games[game_id]['god'])
         games[game_id]['winner'] = data[2]
         players[player][tag]['status'] = 0
-        await sio.emit('finish', data[1], room=player + str(tag))
+        await sio.emit('finish', data[2], room=player + str(tag))
         
 @sio.on('error_finish')
 async def error_finish (soid, data):

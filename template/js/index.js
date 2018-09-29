@@ -186,8 +186,41 @@ function stopSelfPlay() {
     // $('#player-status1').text("");
     // $('#player-status2').text("");
     $('#play').removeAttr("disabled");
-    $('.range').removeAttr("disabled");
+    $('.record').removeAttr("disabled");
     IS_CAN_STEP = false;
+}
+
+
+function playWith(sid) {
+    // $('.user-status').removeClass('label_active');
+    var bnt = $('#' + sid);
+    var all_bnt = $(".user-status");
+    var player = $('#sid').data('id');
+    var tag = $('#chessboard').data('id');
+    // bnt.addClass('gaming-status');
+    // bnt.addClass('label_active');
+    if (bnt.text() == 'play') {
+        switchStatus(all_bnt, 'play', 'gaming-status');
+        switchStatus(bnt, 'stop', 'gaming-stop');
+        all_bnt.attr("disabled", "disabled");
+        $('.record').attr("disabled", "disabled");
+        IS_BLACK = tag > 0;
+        if (IS_BLACK)
+            IS_CAN_STEP = true;
+        socket.emit('self_play', {'player': player, 'AI': sid, 'tag': tag});
+    } else {
+        socket.emit('error_finish', getinfo());
+    }
+}
+
+function watch() {
+    // $('.user-status').text('watch');
+    // $('.user-status').removeClass('gaming-status');
+    // $('.user-status').removeClass('label_active');
+    // $('#' + sid).addClass('gaming-status');
+    // $('#' + sid).addClass('label_active');
+    $('#watch_id').data('id', sid);
+    socket.emit('watch', getinfo());
 }
 
 // 绑定各种按键
@@ -212,6 +245,7 @@ function bindButtonClick(socket) {
     $('#play').click(function () {
         stopSelfPlay();
         $(this).attr("disabled", "disabled");
+        $('.record').attr("disabled", "disabled");
         $(".user-status").attr("disabled", "disabled");
         var player = $('#sid').data('id');
         socket.emit('play', {'player': player, 'tag': 1});
@@ -313,36 +347,6 @@ function switchStatus(bnt, text, status) {
     bnt.text(text);
 }
 
-function playWith(sid) {
-    // $('.user-status').removeClass('label_active');
-    var bnt = $('#' + sid);
-    var all_bnt = $(".user-status");
-    var player = $('#sid').data('id');
-    var tag = $('#chessboard').data('id');
-    // bnt.addClass('gaming-status');
-    // bnt.addClass('label_active');
-    if (bnt.text() == 'play') {
-        switchStatus(all_bnt, 'play', 'gaming-status');
-        switchStatus(bnt, 'stop', 'gaming-stop');
-        all_bnt.attr("disabled", "disabled");
-        IS_BLACK = tag > 0;
-        if (IS_BLACK)
-            IS_CAN_STEP = true;
-        socket.emit('self_play', {'player': player, 'AI': sid, 'tag': tag});
-    } else {
-        socket.emit('error_finish', getinfo());
-    }
-}
-
-function watch() {
-    // $('.user-status').text('watch');
-    // $('.user-status').removeClass('gaming-status');
-    // $('.user-status').removeClass('label_active');
-    // $('#' + sid).addClass('gaming-status');
-    // $('#' + sid).addClass('label_active');
-    $('#watch_id').data('id', sid);
-    socket.emit('watch', getinfo());
-}
 
 // RankList分页实现
 // function change_page(id) {
