@@ -3,8 +3,9 @@ var CHESSBOARD_GRID = 30; // 棋盘每格大小
 var CHESSBOARD_MARGIN = 40; // 棋盘内边距
 var CHESS_SIZE = 15; // 棋盘格数
 var IS_BLACK = true; // 是否黑棋
-var IS_GAME_OVER = false; // 游戏是否结束
+var IS_GAME_OVER = true; // 游戏是否结束
 var IS_CAN_STEP = false; // 是否可以下棋（对手下棋时己方不能下棋）
+var CURRENT_GAME_ID = 0;
 var range_max = 0;
 // 设置canvas的content的
 var ctx = null;
@@ -20,6 +21,7 @@ $(document).ready(function () {
     socket.emit('update_list', "update");
     bindButtonClick(socket);
     drawChessBoard();
+    watch();
 });
 
 // 画出棋盘
@@ -52,7 +54,7 @@ function drawChessBoard() {
 // 画出棋子
 function drawPiece(i, j) {
     // 当前游戏未结束且当前节点未落子
-    if (IS_CAN_STEP && !IS_GAME_OVER && arrPieces[i][j] === 0) {
+    if (IS_CAN_STEP && arrPieces[i][j] === 0) {
         // 画一个新棋子
         // drawNewPiece(i, j, IS_BLACK);
         color = IS_BLACK ? -1 : 1;
@@ -98,7 +100,6 @@ function clientSocket(socket) {
     socket.on('push_game', function (gameInfo) {
         drawChessBoard();
         chess_log = [];
-        console.log(gameInfo);
         if (gameInfo.chess_log) {
             $.each(gameInfo.chess_log, function (index, value) {
                 // console.log(value);
@@ -109,6 +110,7 @@ function clientSocket(socket) {
 
         $('#player-status1').text(gameInfo.white);
         $('#player-status2').text(gameInfo.black);
+        CURRENT_GAME_ID = gameInfo.game_id;
         if ('winner' in gameInfo) {
             $('#range').attr('max', chess_log.length);
             $('#range').val(chess_log.length);
@@ -125,6 +127,7 @@ function clientSocket(socket) {
     });
 
     socket.on('register', function (info) {
+        console.log('register');
         $(".user-status").removeAttr("disabled");
     });
 
@@ -135,24 +138,25 @@ function clientSocket(socket) {
         IS_CAN_STEP = !IS_CAN_STEP;
     });
 
-    socket.on('finish', function (winner) {
-        console.log('finish', winner);
+    socket.on('finish', function (info) {
+        console.log(info);
+        if (info.game_id != CURRENT_GAME_ID)
+            return;
         $('#range').attr('max', chess_log.length);
         $('#range').val(chess_log.length);
         $('#range_num').val(chess_log.length);
         range_max = chess_log.length;
-        if (winner == 0)
+        if (info.winner == 0)
             setGameStatus('Game draw!');
         else
-            setGameStatus('Game finished, ' + winner + ' WIN！');
-        stopSelfPlay();
+            setGameStatus('Game finished, ' + info.winner + ' WIN！');
+        stopPlay();
     });
 
     socket.on('error_finish', function (winner) {
-        console.log('error_finish', winner);
         drawChessBoard();
         setGameStatus('Game error finished!');
-        stopSelfPlay();
+        stopPlay();
     });
 
     socket.on('error', function (info) {
@@ -183,19 +187,23 @@ function getinfo() {
     return {'player': $('#sid').data('id'), 'tag': $('#chessboard').data('id')};
 }
 
-function stopSelfPlay() {
-    $('#self_play').data('name', 'play');
+function stopPlay() {
+    // $('#self_play').data('name', 'play');
     switchStatus($('.user-status'), 'play', 'gaming-status');
     // $('#player-status1').text("");
     // $('#player-status2').text("");
+    $(".user-status").removeAttr("disabled");
     $('#play').removeAttr("disabled");
     $('.record').removeAttr("disabled");
     IS_CAN_STEP = false;
+    IS_GAME_OVER = true;
 }
 
 
 function playWith(sid) {
     // $('.user-status').removeClass('label_active');
+    if (!IS_GAME_OVER)
+        return;
     var bnt = $('#' + sid);
     var all_bnt = $(".user-status");
     var player = $('#sid').data('id');
@@ -245,11 +253,12 @@ function bindButtonClick(socket) {
 
     //开始比赛
     $('#play').click(function () {
-        stopSelfPlay();
+        stopPlay();
         $(this).attr("disabled", "disabled");
         $('.record').attr("disabled", "disabled");
         $(".user-status").attr("disabled", "disabled");
         var player = $('#sid').data('id');
+        IS_GAME_OVER = false;
         socket.emit('play', {'player': player, 'tag': 1});
         for (var i = 0; i < 1000; i++) ;
         socket.emit('play', {'player': player, 'tag': -1});
@@ -439,7 +448,7 @@ function switchStatus(bnt, text, status) {
 // }
 // 加载在线用户列表(无分页)
 function handlebarsUserList(userList) {
-    console.log(userList);
+    // console.log(userList);
     var now_sid = parseInt($("#sid").attr("data-id"));
     var now_rank = 11;
     var now_score = 0;
@@ -476,7 +485,6 @@ function handlebarsUserList(userList) {
         playWith($(this).attr('id'));
     });
     $('.user-status').addClass('gaming-status');
-    watch();
 }
 
 // 设置游戏状态

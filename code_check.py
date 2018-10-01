@@ -45,6 +45,7 @@ class CodeCheck():
         if not self.__check_advance_chessboard():
             self.errormsg = "Your code is too weak, fail to pass base test."
             return False
+
         return True
 
 
@@ -59,6 +60,7 @@ class CodeCheck():
         return True
     
     def __check_go (self, chessboard):
+        self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, -1, self.time_out)
         try:
             timeout(1)(self.agent.go)(np.copy(chessboard))
         except Exception:
@@ -101,10 +103,10 @@ class CodeCheck():
     
         # defense 5 inline
         chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
-        chessboard[0, 0:3] = -1
+        chessboard[0, 0:2] = -1
         chessboard[0, 7] = -1
-        chessboard[1, 0:4] = 1
-        if not self.__check_result(chessboard, [[1, 4]]):
+        chessboard[1, 1:4] = 1
+        if not self.__check_result(chessboard, [[1, 4], [1, 0]]):
             return False
     
         # two three
@@ -118,8 +120,8 @@ class CodeCheck():
     
         # defense
         chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
-        chessboard[1, 0:2] = -1
-        chessboard[2:4, 2] = -1
+        chessboard[0, 0:2] = -1
+        chessboard[0:2, 4] = -1
         chessboard[1, 6:8] = 1
         chessboard[2:4, 8] = 1
         if not self.__check_result(chessboard, [[1, 8]]):

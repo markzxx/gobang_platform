@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+import sys
+
 from code_check import CodeCheck
-def main():
-    code_checker = CodeCheck("C:\\Users\\markz\\Documents\\Tencent Files\\565323034\\FileRecv\\gobang.py", 15)
+
+
+def main (path):
+    code_checker = CodeCheck(path, 15)
     if not code_checker.check_code():
         print(code_checker.errormsg)
     else:
         print('pass')
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1])

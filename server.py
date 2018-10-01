@@ -5,6 +5,7 @@ import imp
 import os
 import random
 import subprocess
+from asyncio import sleep
 from collections import defaultdict
 
 import aiohttp_jinja2
@@ -130,9 +131,11 @@ class Http_handler:
                 await cursor.execute("SELECT * FROM users where sid='{}' and submit_time != 0".format(sid))
                 row = await cursor.fetchone()
                 if row:
-                    await cursor.execute("update users set last_update=CURRENT_TIMESTAMP where sid='{}'".format(sid))
+                    await cursor.execute("update users set last_update=now() where sid='{}'".format(sid))
                 else:
-                    await cursor.execute("update users set submit_time=CURRENT_TIMESTAMP, last_update=CURRENT_TIMESTAMP where sid='{}'".format(sid))
+                    await cursor.execute("update users set submit_time=now(), last_update=now() where sid='{}'".format(sid))
+                    global score_info
+                    score_info[sid] = 0
         await update_all_list()
         return {'sid': sid, 'error': "Upload success, usability test pass."}
 
@@ -159,6 +162,7 @@ rank_info = []
 score_info = {}
 max_game_id = 0
 games = defaultdict(dict)
+watching_room = set()
 players = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
 def score(row):
@@ -198,7 +202,8 @@ async def update_chess_log (game_id):
 
 
 async def push_game (player, tag, soid=None):
-    await sio.emit('push_game', games[players[player][tag]['id']], room=soid if soid else player + str(tag))
+    if soid or (player + str(tag) in watching_room):
+        await sio.emit('push_game', games[players[player][tag]['id']], room=soid if soid else player + str(tag))
 
 
 @sio.on('connect')
@@ -214,9 +219,13 @@ async def message (soid, msg):
 async def watch (soid, data):
     player = str(data['player'])
     tag = int(data['tag'])
+    new_room = player + str(tag)
     if len(sio.rooms(soid)) > 1:
-        sio.leave_room(soid, sio.rooms(soid)[1])
-    sio.enter_room(soid, player + str(tag))
+        old_room = sio.rooms(soid)[1]
+        sio.leave_room(soid, old_room)
+        watching_room.remove(old_room)
+    sio.enter_room(soid, new_room)
+    watching_room.add(new_room)
     await push_game(player, tag, soid)
 
 @sio.on('self_play')
@@ -251,7 +260,7 @@ async def self_begin (player, tag, white, black):
         game_id = random.randint(10 ** 10, 2 * 10 ** 10)
     players[player][tag]['id'] = game_id
     players[player][tag]['status'] = 1
-    games[game_id] = {'white': white, 'black': black, "chess_log": [], "type": 2}
+    games[game_id] = {'white': white, 'black': black, "chess_log": [], 'game_id': game_id, "type": 2}
     await push_game(player, tag)
     print(white, black, player, tag)
     subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
@@ -264,7 +273,8 @@ async def self_register (soid, data):
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
         games[game_id]['god'] = soid
-        await sio.emit('register', 0, room=player + str(tag))
+        if player + str(tag) in watching_room:
+            await sio.emit('register', 0, room=player + str(tag))
 
 @sio.on('self_go')
 async def self_go (soid, data):  # data[player1, tag, x, y, color]
@@ -276,7 +286,8 @@ async def self_go (soid, data):  # data[player1, tag, x, y, color]
         games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4]))
         god = games[game_id]['god']
         await sio.emit('self_go', data[2:], god)
-        await sio.emit('go', data[2:], room=player + str(tag))
+        if player + str(tag) in watching_room:
+            await sio.emit('go', data[2:], room=player + str(tag))
 
 @sio.on('self_finish')
 async def self_finish (soid, data):  # data[player, tag, winner, loser]
@@ -286,7 +297,8 @@ async def self_finish (soid, data):  # data[player, tag, winner, loser]
         game_id = players[player][tag]['id']
         games[game_id]['winner'] = data[2]
         players[player][tag]['status'] = 0
-        await sio.emit('finish', data[2], room=player + str(tag))
+        if player + str(tag) in watching_room:
+            await sio.emit('finish', {'winner': data[2], 'game_id': game_id}, room=player + str(tag))
         
 @sio.on('play')
 async def play (soid, data):
@@ -324,7 +336,7 @@ async def begin (player, tag, white, black):
     print("begin", white, black, game_id)
     players[player][tag]['id'] = game_id
     players[player][tag]['status'] = 1
-    games[game_id] = {'white': white, 'black': black, "chess_log": [], "type": 1}
+    games[game_id] = {'white': white, 'black': black, "chess_log": [], 'game_id': game_id, "type": 1}
     await push_game(player, tag)
     subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
 
@@ -335,22 +347,24 @@ async def go (soid, data):  # data[player, tag, x, y, color]
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
         games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4]))
-        await sio.emit('go', data[2:], room=player + str(tag))
+        if player + str(tag) in watching_room:
+            await sio.emit('go', data[2:], room=player + str(tag))
         
 @sio.on('finish')
 async def finish (soid, data):  # data[player, tag, winner, loser]
     player = str(data[0])
     tag = int(data[1])
-    print('finish', data)
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
         await update_game_log(game_id, data[2], data[3])
-        await update_all_list()
+        await update_all_list(data[2], data[3])
         if 'god' in games[game_id]:
             await sio.emit('finish', 0, games[game_id]['god'])
         games[game_id]['winner'] = data[2]
         players[player][tag]['status'] = 0
-        await sio.emit('finish', data[2], room=player + str(tag))
+        print('finish', {'winner': data[2], 'game_id': game_id})
+        if player + str(tag) in watching_room:
+            await sio.emit('finish', {'winner': data[2], 'game_id': game_id}, room=player + str(tag))
         
 @sio.on('error_finish')
 async def error_finish (soid, data):
@@ -367,10 +381,12 @@ async def error_finish (soid, data):
         players[player][tag]['status'] = 0
         if 'new_game' not in data:
             print('error')
-            await sio.emit('error_finish', 0, room=player + str(tag))
+            if player + str(tag) in watching_room:
+                await sio.emit('error_finish', 0, room=player + str(tag))
 
 @sio.on('error')
 async def error (soid, data):  # data[player, tag, msg]
+    await sleep(0.1)
     await sio.emit('error', {'type': 2, 'info': data[2]}, room=str(data[0]) + str(data[1]))
 
 
@@ -387,11 +403,23 @@ async def order (soid, data):
     elif order == 'update_rank':
         global max_game_id
         max_game_id = 0
-        await update_all_list()
+        await init_list()
 
 
-async def update_all_list ():
-    global rank_info, score_info, max_game_id
+async def update_all_list (winner=0, loser=0):
+    global rank_info
+    if winner != loser:
+        score_info[winner] += 5
+        score_info[loser] -= 5
+        if score_info[loser] < 0:
+            score_info[loser] = 0
+    rank_info = [{'sid': k, 'score': v} for k, v in score_info.items()]
+    rank_info.sort(key=lambda x: (x['score'], random.random()), reverse=True)
+    await sio.emit('update_list', rank_info)
+
+
+async def init_list ():
+    global score_info
 
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
@@ -403,12 +431,11 @@ async def update_all_list ():
 
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
-            await cursor.execute("SELECT id, winner, loser FROM game_log WHERE id>%d" % (max_game_id))
+            await cursor.execute("SELECT winner, loser FROM game_log")
             logs = await cursor.fetchall()
     for row in logs:
-        winner = str(row[1])
-        loser = str(row[2])
-        max_game_id = row[0]
+        winner = str(row[0])
+        loser = str(row[1])
         if winner == loser:
             continue
         if winner in score_info:
@@ -418,10 +445,7 @@ async def update_all_list ():
                 score_info[loser] -= 5
             else:
                 score_info[loser] = 0
-    
-    rank_info = [{'sid': k, 'score': v} for k, v in score_info.items()]
-    rank_info.sort(key=lambda x: (x['score'], random.random()), reverse=True)
-    await sio.emit('update_list', rank_info)
+    await update_all_list()
 
 @sio.on('update_list')
 async def update_one_list(soid, data):
@@ -433,8 +457,8 @@ def disconnect(soid):
 
 async def init_pool ():
     global pool
-    pool = await aiomysql.create_pool(host='10.20.13.19', port=3306, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True, minsize=1, maxsize=100)
-    await update_all_list()
+    pool = await aiomysql.create_pool(host='127.0.0.1', port=3307, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True, minsize=1, maxsize=100)
+    await init_list()
     
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()

@@ -331,7 +331,10 @@ def fight (begin_data):
         socketIO.emit("go", go_data)
         #print(go_data)
 
+    finish_data = begin_data + [god.color_user_map[god.winner], god.color_user_map[-god.winner]]
+
     if god.error:
+        socketIO.emit("finish", finish_data)
         error_data = begin_data + [god.error]
         socketIO.emit("error", error_data)
         #print(error_data)
@@ -339,10 +342,7 @@ def fight (begin_data):
         go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
         #print(go_data)
         socketIO.emit("go", go_data)
-    
-    finish_data = begin_data + [god.color_user_map[god.winner], god.color_user_map[-god.winner]]
-    socketIO.emit("finish", finish_data)
-
+        socketIO.emit("finish", finish_data)
 
 
 if __name__ == '__main__':
@@ -389,6 +389,7 @@ if __name__ == '__main__':
                 break
             except Exception:
                 print(traceback.format_exc())
+        socketIO.wait(seconds=1)
         socketIO.disconnect()
 
     socketIO.wait(seconds=600)
