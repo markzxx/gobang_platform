@@ -1,5 +1,5 @@
 import ctypes
-import imp
+import importlib
 import inspect
 import os
 import signal
@@ -136,7 +136,7 @@ class God(object):
         black_path = os.path.join(file_dic, black + '.py')
         try:
             if 'human' not in white:
-                self.white = imp.load_source('AI', white_path).AI(self.chessboard_size, 1, self.time_out)
+                self.white = importlib.import_module(file_dic + '.' + white).AI(self.chessboard_size, 1, self.time_out)
         except Exception:
             self.finish = True
             self.error = traceback.format_exc()
@@ -144,7 +144,7 @@ class God(object):
     
         try:
             if 'human' not in black:
-                self.black = imp.load_source('AI', black_path).AI(self.chessboard_size, -1, self.time_out)
+                self.black = importlib.import_module(file_dic + '.' + black).AI(self.chessboard_size, -1, self.time_out)
         except Exception:
             self.finish = True
             self.error = traceback.format_exc()
@@ -211,32 +211,20 @@ class God(object):
     def update(self, color):
         assert self.chessboard.all()<2 and self.chessboard.all()>-2
 
-        if color == 1:
-            try:
-                timeout(self.time_out)(self.white.go)(np.copy(self.chessboard))#timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
-            except MemoryError:
-                memory_error = traceback.format_exc()
-                self.memory_fail(memory_error)
-                return ''
-            except timeout_decorator.timeout_decorator.TimeoutError:
-                pass
-            except Exception:
-                self.fail_step(color=color)
-                god.error = traceback.format_exc()
-            tem_list = self.white.candidate_list
-        else:
-            try:
-                timeout(self.time_out)(self.black.go)(np.copy(self.chessboard))#timeout(god.time_out)(self.black.go)(self.last_pos)#--------------------------------------------------------
-            except MemoryError:
-                memory_error = traceback.format_exc()
-                self.memory_fail(memory_error)
-                return ''
-            except timeout_decorator.timeout_decorator.TimeoutError:
-                pass
-            except Exception:
-                self.fail_step(color=color)
-                god.error = traceback.format_exc()
-            tem_list = self.black.candidate_list
+        agent = self.white if color == 1 else self.black
+
+        try:
+            timeout(self.time_out)(agent.go)(np.copy(self.chessboard))  # timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
+        except MemoryError:
+            memory_error = traceback.format_exc()
+            self.memory_fail(memory_error)
+            return ''
+        except timeout_decorator.timeout_decorator.TimeoutError:
+            pass
+        except Exception:
+            self.fail_step(color=color)
+            god.error = traceback.format_exc()
+        tem_list = agent.candidate_list
 
         if len(tem_list) > 0:
             pos = tem_list[-1]
@@ -296,45 +284,28 @@ def self_fight (first, begin_data):
 
 
 def fight (begin_data):
-    while True:
-        #--------------------------------
-        tem_color = -1
-        player_now[0] = tem_color
-
-        memory_usage = get_mem()
-        tem_mem = player_memory[tem_color]
-
-        god.update(color=tem_color)
-
-        after_step_memory = get_mem()
-        player_memory[tem_color] = tem_mem + after_step_memory - memory_usage
-
-        if god.finish: break
-        go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
-        socketIO.emit("go", go_data)
-        #print(go_data)
-
-        #--------------------------------
-        tem_color = 1
-        player_now[0] = tem_color
-
-        memory_usage = get_mem()
-        tem_mem = player_memory[tem_color]
-
-        god.update(color=tem_color)
-
-        after_step_memory = get_mem()
-        player_memory[tem_color] = tem_mem + after_step_memory - memory_usage
-
-        if god.finish: break
-        go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
-        socketIO.emit("go", go_data)
-        #print(go_data)
+    tem_color = 0
+    while not god.finish:
+        for i in [-1, 1]:
+            tem_color = i
+            player_now[0] = tem_color
+            
+            memory_usage = get_mem()
+            tem_mem = player_memory[tem_color]
+            
+            god.update(color=tem_color)
+            
+            after_step_memory = get_mem()
+            player_memory[tem_color] = tem_mem + after_step_memory - memory_usage
+            
+            if god.finish: break
+            go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
+            socketIO.emit("go", go_data)
+            #print(go_data)
 
     finish_data = begin_data + [god.color_user_map[god.winner], god.color_user_map[-god.winner]]
 
     if god.error:
-        socketIO.emit("finish", finish_data)
         error_data = begin_data + [god.error]
         socketIO.emit("error", error_data)
         #print(error_data)
@@ -342,7 +313,8 @@ def fight (begin_data):
         go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
         #print(go_data)
         socketIO.emit("go", go_data)
-        socketIO.emit("finish", finish_data)
+    
+    socketIO.emit("finish", finish_data)
 
 
 if __name__ == '__main__':

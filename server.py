@@ -223,7 +223,8 @@ async def watch (soid, data):
     if len(sio.rooms(soid)) > 1:
         old_room = sio.rooms(soid)[1]
         sio.leave_room(soid, old_room)
-        watching_room.remove(old_room)
+        if old_room in watching_room:
+            watching_room.remove(old_room)
     sio.enter_room(soid, new_room)
     watching_room.add(new_room)
     await push_game(player, tag, soid)
@@ -362,7 +363,7 @@ async def finish (soid, data):  # data[player, tag, winner, loser]
             await sio.emit('finish', 0, games[game_id]['god'])
         games[game_id]['winner'] = data[2]
         players[player][tag]['status'] = 0
-        print('finish', {'winner': data[2], 'game_id': game_id})
+        print('finish', {'player': player, 'winner': data[2], 'game_id': game_id})
         if player + str(tag) in watching_room:
             await sio.emit('finish', {'winner': data[2], 'game_id': game_id}, room=player + str(tag))
         
@@ -386,7 +387,7 @@ async def error_finish (soid, data):
 
 @sio.on('error')
 async def error (soid, data):  # data[player, tag, msg]
-    await sleep(0.1)
+    sleep(0.1)
     await sio.emit('error', {'type': 2, 'info': data[2]}, room=str(data[0]) + str(data[1]))
 
 
