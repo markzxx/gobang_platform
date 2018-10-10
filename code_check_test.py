@@ -9,4 +9,4 @@ def main (path):
         print('pass')
 
 if __name__ == '__main__':
-    main('tem_code/11610634_汪至圆_GoBang_bot.py')
+    main('tem_code/test.py')
