@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-import sys
-
 from code_check import CodeCheck
-
 
 def main (path):
     code_checker = CodeCheck(path, 15)
@@ -12,4 +9,4 @@ def main (path):
         print('pass')
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main('tem_code/11610634_汪至圆_GoBang_bot.py')

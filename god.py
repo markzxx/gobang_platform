@@ -17,7 +17,7 @@ from timeout_decorator import timeout
 player_now=[0]
 
 player_memory = {1: 0, -1: 0}
-
+player_time = {1: 0, -1: 0}
 
 
 
@@ -138,30 +138,34 @@ class God(object):
             if 'human' not in white:
                 self.white = importlib.import_module(file_dic + '.' + white).AI(self.chessboard_size, 1, self.time_out)
         except Exception:
-            self.finish = True
+            self.fail_step(color=1)
             self.error = traceback.format_exc()
-            self.winner = -1
     
         try:
             if 'human' not in black:
                 self.black = importlib.import_module(file_dic + '.' + black).AI(self.chessboard_size, -1, self.time_out)
         except Exception:
-            self.finish = True
+            self.fail_step(color=-1)
             self.error = traceback.format_exc()
-            self.winner = 1
+
         self.user_color_map = {white: 1, black: -1}
         self.color_user_map = {1: white, -1: black, 0: 0}
 
     def check_chess(self, pos, color):
-        if pos[0]<0 or pos[0]>=self.chessboard_size or pos[1]<0 or pos[1]>=self.chessboard_size:
-            self.error = self.error +"Dear "+str(self.color_user_map[color])+ ' : your postion of last chess is out of bound.\n'
-            self.finish = True
-            return True
-
-        if self.chessboard[pos[0], pos[1]] != 0:
-            self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is not empty.\n'
-            self.finish = True
-            return True
+        try:
+            if pos[0] < 0 or pos[0] >= self.chessboard_size or pos[1] < 0 or pos[1] >= self.chessboard_size:
+                self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is out of bound.\n'
+                self.finish = True
+                return True
+        
+            if self.chessboard[pos[0], pos[1]] != 0:
+                self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is not empty.\n'
+                self.finish = True
+                return True
+        except Exception:
+            self.fail_step(color=color)
+            god.error = traceback.format_exc()
+        
 
     def check_chess_board (self, pos, color):
         def get_chess (chess_pos_list, size):
@@ -212,7 +216,6 @@ class God(object):
         assert self.chessboard.all()<2 and self.chessboard.all()>-2
 
         agent = self.white if color == 1 else self.black
-
         try:
             timeout(self.time_out)(agent.go)(np.copy(self.chessboard))  # timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
         except MemoryError:
@@ -224,6 +227,8 @@ class God(object):
         except Exception:
             self.fail_step(color=color)
             god.error = traceback.format_exc()
+            return
+            
         tem_list = agent.candidate_list
 
         if len(tem_list) > 0:
@@ -291,13 +296,20 @@ def fight (begin_data):
             player_now[0] = tem_color
             
             memory_usage = get_mem()
+            start_time = time.time()
             tem_mem = player_memory[tem_color]
             
             god.update(color=tem_color)
             
             after_step_memory = get_mem()
+            end_time = time.time()
+
+            player_time[tem_color] += end_time - start_time
             player_memory[tem_color] = tem_mem + after_step_memory - memory_usage
-            
+
+            if player_time[tem_color] > total_time:
+                god.fail_step(tem_color)
+                god.error = player[tem_color] + ' excess total time.'
             if god.finish: break
             go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
             socketIO.emit("go", go_data)
@@ -325,12 +337,14 @@ if __name__ == '__main__':
 
     socketIO = SocketIO('localhost', 8080, Namespace)
     sys.stdout = open(os.devnull, 'w')
+    sys.stderr = open(os.devnull, 'w')
     arg_list = sys.argv
     file_dic = arg_list[1]
     white = arg_list[2]
     black = arg_list[3]
     size = int(arg_list[4])
-    time_interval = float(arg_list[5])
+    time_interval = 5
+    total_time = 180
     player = arg_list[6]
     tag = arg_list[7]
 

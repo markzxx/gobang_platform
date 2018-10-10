@@ -7,20 +7,23 @@ check the security and functionability of uploaded code
 """
 import imp
 import traceback
-from chess_case import ChessCase
 
 import numpy as np
 from timeout_decorator import timeout
+
+from chess_case import ChessCase
 
 FORBIDDEN_LIST = ['import os', 'exec']
 
 class CodeCheck():
     def __init__ (self, script_file_path, chessboard_size):
-        self.time_out = 1
+        self.time_out = 5
         self.script_file_path = script_file_path
         self.chessboard_size = chessboard_size
         self.agent = None
         self.errormsg = 'Error'
+        # sys.stdout = open(os.devnull, 'w')
+        # sys.stderr = open(os.devnull, 'w')
         # print(self.chessboard)
 
     # Call this function and get True or False, self.errormsg has the massage
@@ -63,7 +66,7 @@ class CodeCheck():
     def __check_go (self, chessboard):
         self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, -1, self.time_out)
         try:
-            timeout(1)(self.agent.go)(np.copy(chessboard))
+            timeout(self.time_out)(self.agent.go)(np.copy(chessboard))
         except Exception:
             self.errormsg = "Error:" + traceback.format_exc()
             return False

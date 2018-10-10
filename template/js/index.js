@@ -120,8 +120,9 @@ function clientSocket(socket) {
                 setGameStatus('Game draw!');
             else
                 setGameStatus('Game finished, ' + gameInfo['winner'] + ' WIN！');
+            stopPlay();
         } else {
-            setGameStatus('Game Begin');
+            setGameStatus('Game Going');
             $('.record').attr("disabled", "disabled");
         }
     });
@@ -188,11 +189,9 @@ function getinfo() {
 }
 
 function stopPlay() {
-    // $('#self_play').data('name', 'play');
-    switchStatus($('.user-status'), 'play', 'gaming-status');
-    // $('#player-status1').text("");
-    // $('#player-status2').text("");
-    $(".user-status").removeAttr("disabled");
+    var all_user = $('.user-status');
+    switchStatus(all_user, 'play', 'gaming-status');
+    all_user.removeAttr("disabled");
     $('#play').removeAttr("disabled");
     $('.record').removeAttr("disabled");
     IS_CAN_STEP = false;
@@ -202,14 +201,10 @@ function stopPlay() {
 
 function playWith(sid) {
     // $('.user-status').removeClass('label_active');
-    if (!IS_GAME_OVER)
-        return;
     var bnt = $('#' + sid);
     var all_bnt = $(".user-status");
     var player = $('#sid').data('id');
     var tag = $('#chessboard').data('id');
-    // bnt.addClass('gaming-status');
-    // bnt.addClass('label_active');
     if (bnt.text() == 'play') {
         switchStatus(all_bnt, 'play', 'gaming-status');
         switchStatus(bnt, 'stop', 'gaming-stop');
@@ -224,12 +219,6 @@ function playWith(sid) {
 }
 
 function watch() {
-    // $('.user-status').text('watch');
-    // $('.user-status').removeClass('gaming-status');
-    // $('.user-status').removeClass('label_active');
-    // $('#' + sid).addClass('gaming-status');
-    // $('#' + sid).addClass('label_active');
-    $('#watch_id').data('id', sid);
     socket.emit('watch', getinfo());
 }
 
@@ -259,28 +248,9 @@ function bindButtonClick(socket) {
         $(".user-status").attr("disabled", "disabled");
         var player = $('#sid').data('id');
         IS_GAME_OVER = false;
+        IS_CAN_STEP = false;
         socket.emit('play', {'player': player, 'tag': 1});
-        for (var i = 0; i < 1000; i++) ;
-        socket.emit('play', {'player': player, 'tag': -1});
     });
-
-    //开始人机对战
-    // $('#self_play').click(function () {
-    //     var $this = $(this);
-    //     var status = $this.data('name');
-    //     var player = $this.data('id');
-    //     var tag = $('#chessboard').data('id');
-    //     if (status == 'play') {
-    //         $this.data('name', 'stop');
-    //         $this.text('Stop');
-    //         IS_BLACK = tag > 0;
-    //         if (IS_BLACK)
-    //             IS_CAN_STEP = true;
-    //         socket.emit('self_play', {'player': player, 'AI': player, 'tag': tag});
-    //     } else {
-    //         socket.emit('error_finish', getinfo());
-    //     }
-    // });
 
     //复盘系统
     $("#range_num").change(function (event) {
@@ -358,6 +328,53 @@ function switchStatus(bnt, text, status) {
     bnt.text(text);
 }
 
+// 加载在线用户列表(无分页)
+function handlebarsUserList(userList) {
+    var now_sid = parseInt($("#sid").attr("data-id"));
+    var now_rank = 11;
+    var now_score = 0;
+    var user_rank_html = '<tr><th colspan=4 style="text-align:center;cursor:default">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
+    var state = "";
+
+    var value;
+    for (var index = 0; index < userList.length; index++) {
+        value = userList[index];
+        if (index < 10) {
+            if (now_sid == value.sid) {
+                state = "info";
+                now_rank = index + 1;
+                now_score = value.score;
+            }
+            user_rank_html += '<tr class="' + state + ' rank-' + (index + 1) + '"><td><p class="user-rank">' + (index + 1) + '</p></td><td><p class="user-id">' + value.sid + '</p></td>' + '<td><p class="user-score">' + value.score + '</p></td>' + '<td><button class="label user-status" id="' + value.sid + '" >play</button></td></tr>';
+            state = "";
+        } else {
+            if (now_sid == value.sid) {
+                now_rank = index + 1;
+                now_score = value.score;
+                break;
+            }
+        }
+    }
+    if (parseInt(now_rank) > 10) {
+        user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'>" +
+            '<tr class="info"><td>' + (now_rank) + '</td><td><p class="user-id">' + now_sid + '</p></td>' + '<td><p class="user-score">' + now_score + '</p></td><td>Yourself</td>' + '</tr>' +
+            "</tr>";
+    }
+
+    $('#rank_table').html(user_rank_html);
+    var all_user = $('.user-status');
+    all_user.click(function (e) {
+        playWith($(this).attr('id'));
+    });
+    all_user.addClass('gaming-status');
+    if (!IS_GAME_OVER)
+        all_user.attr('disable', 'disable');
+}
+
+// 设置游戏状态
+function setGameStatus(status) {
+    $('#current_status').html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + status);
+}
 
 // RankList分页实现
 // function change_page(id) {
@@ -446,51 +463,6 @@ function switchStatus(bnt, text, status) {
 //   $('#' + $('#watch_id').data('id')).addClass('gaming-status');
 //
 // }
-// 加载在线用户列表(无分页)
-function handlebarsUserList(userList) {
-    // console.log(userList);
-    var now_sid = parseInt($("#sid").attr("data-id"));
-    var now_rank = 11;
-    var now_score = 0;
-    var user_rank_html = '<tr><th colspan=4 style="text-align:center;cursor:default">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
-    var state = "";
-
-    var value;
-    for (var index = 0; index < userList.length; index++) {
-        value = userList[index];
-        if (index < 10) {
-            if (now_sid == value.sid) {
-                state = "info";
-                now_rank = index + 1;
-                now_score = value.score;
-            }
-            user_rank_html += '<tr class="' + state + ' rank-' + (index + 1) + '"><td><p class="user-rank">' + (index + 1) + '</p></td><td><p class="user-id">' + value.sid + '</p></td>' + '<td><p class="user-score">' + value.score + '</p></td>' + '<td><button class="label user-status" id="' + value.sid + '" >play</button></td></tr>';
-            state = "";
-        } else {
-            if (now_sid == value.sid) {
-                now_rank = index + 1;
-                now_score = value.score;
-                break;
-            }
-        }
-    }
-    if (parseInt(now_rank) > 10) {
-        user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'>" +
-            '<tr class="info"><td>' + (now_rank) + '</td><td><p class="user-id">' + now_sid + '</p></td>' + '<td><p class="user-score">' + now_score + '</p></td><td>Yourself</td>' + '</tr>' +
-            "</tr>";
-    }
-
-    $('#rank_table').html(user_rank_html);
-    $('.user-status').click(function (e) {
-        playWith($(this).attr('id'));
-    });
-    $('.user-status').addClass('gaming-status');
-}
-
-// 设置游戏状态
-function setGameStatus(status) {
-    $('#current_status').html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + status);
-}
 
 //设置ranklist可拖动
 var Dragging = function (validateHandler) {
