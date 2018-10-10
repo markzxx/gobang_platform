@@ -7,6 +7,7 @@ check the security and functionability of uploaded code
 """
 import imp
 import traceback
+from chess_case import ChessCase
 
 import numpy as np
 from timeout_decorator import timeout
@@ -94,37 +95,9 @@ class CodeCheck():
         return True
     
     def __check_advance_chessboard (self):
-        # win
-        chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
-        chessboard[0, 0:4] = -1
-        chessboard[1, 0:4] = 1
-        if not self.__check_result(chessboard, [[0, 4]]):
-            return False
-    
-        # defense 5 inline
-        chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
-        chessboard[0, 0:2] = -1
-        chessboard[0, 7] = -1
-        chessboard[1, 1:4] = 1
-        if not self.__check_result(chessboard, [[1, 4], [1, 0]]):
-            return False
-    
-        # two three
-        chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
-        chessboard[1, 1:3] = -1
-        chessboard[2:4, 3] = -1
-        chessboard[1, 6:8] = 1
-        chessboard[2:4, 8] = 1
-        if not self.__check_result(chessboard, [[1, 3]]):
-            return False
-    
-        # defense
-        chessboard = np.zeros((self.chessboard_size, self.chessboard_size), dtype=np.int)
-        chessboard[0, 0:2] = -1
-        chessboard[0:2, self.chessboard_size - 1] = -1
-        chessboard[1, 6:8] = 1
-        chessboard[2:4, 8] = 1
-        if not self.__check_result(chessboard, [[0, 8], [1, 8], [4, 8], [5, 8], [1, 5], [1, 9], [1, 10]]):
-            return False
-
+        case_list = ChessCase.load_cases_files("testcases.txt")
+        for case in case_list:
+            if not self.__check_result(case.get_board(), case.get_rational_steps()):
+                print((case.get_board(), case.get_rational_steps()))
+                return False
         return True
