@@ -9,6 +9,7 @@ import imp
 import traceback
 
 import numpy as np
+from timeout_decorator import timeout
 
 from chess_case import ChessCase
 
@@ -28,29 +29,36 @@ class CodeCheck():
     # Call this function and get True or False, self.errormsg has the massage
     def check_code(self):
         # check if contains forbidden library
-        if self.__check_forbidden_import() == False:
+        try:
+            if self.__check_forbidden_import() == False:
+                return False
+        except Exception:
+            self.errormsg = self.errormsg + traceback.format_exc()
             return False
     
         # check initialization
         try:
-            self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, 1, self.time_out)
-            self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, -1, self.time_out)
+            timeout(self.time_out)(self.time_out_init)()
+            # self.time_out_init()
         except Exception:
-            self.errormsg = "Fail to init"
+            self.errormsg = "Your code fail to init."
             return False
     
         # check simple condition
         if not self.__check_simple_chessboard():
-            self.errormsg = "Can not pass usability test."
+            self.errormsg = "Your code can not pass base test."
             return False
     
         # check advance condition, online test contain more test case than this demo
         if not self.__check_advance_chessboard():
-            self.errormsg = "Your code is too weak, fail to pass base test."
+            self.errormsg = "Your code is too weak, fail to pass advance test."
             return False
 
         return True
 
+    def time_out_init (self):
+        self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, 1, self.time_out)
+        self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, -1, self.time_out)
 
     def __check_forbidden_import(self):
         with open(self.script_file_path, 'r', encoding='UTF-8') as myfile:
@@ -65,8 +73,8 @@ class CodeCheck():
     def __check_go (self, chessboard):
         self.agent = imp.load_source('AI', self.script_file_path).AI(self.chessboard_size, -1, self.time_out)
         try:
-            self.agent.go(np.copy(chessboard))
-            # timeout(self.time_out)(self.agent.go)(np.copy(chessboard))
+            # self.agent.go(np.copy(chessboard))
+            timeout(self.time_out)(self.agent.go)(np.copy(chessboard))
         except Exception:
             self.errormsg = "Error:" + traceback.format_exc()
             return False
@@ -76,6 +84,7 @@ class CodeCheck():
         if not self.__check_go(chessboard):
             return False
         if not self.agent.candidate_list or list(self.agent.candidate_list[-1]) not in result:
+            print(list(self.agent.candidate_list[-1]))
             return False
         return True
         

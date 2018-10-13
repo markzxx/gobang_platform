@@ -1,7 +1,6 @@
 import asyncio
 import base64
 import hashlib
-import imp
 import os
 import random
 import subprocess
@@ -121,23 +120,10 @@ class Http_handler:
                     return {'sid': sid, 'error': "Your code can not excess 1M."}
 
         #test code
-        code_checker = imp.load_source('CodeCheck', 'code_check.py').CodeCheck('tem_code/{}.py'.format(sid), 15)
-        # code_checker = CodeCheck('tem_code/{}.py'.format(sid))
-        if not code_checker.check_code():
-            return {'sid': sid, 'error': code_checker.errormsg}
-        subprocess.Popen('mv tem_code/{}.py user_code/{}.py'.format(sid, sid), shell=True)
-        async with pool.acquire() as conn:
-            async with conn.cursor() as cursor:
-                await cursor.execute("SELECT update_times FROM users where sid='{}' and submit_time is not null".format(sid))
-                row = await cursor.fetchone()
-                if row:
-                    await cursor.execute("update users set last_update=current_timestamp, update_times={} where sid='{}'".format(int(row[0]) + 1, sid))
-                else:
-                    await cursor.execute("update users set submit_time=current_timestamp, last_update=current_timestamp where sid='{}'".format(sid))
-                    global score_info
-                    score_info[sid]['score'] = -10
-        await update_all_list()
-        return {'sid': sid, 'error': "Upload success, usability test pass."}
+        subprocess.Popen("python code_check_test.py tem_code {}".format(sid), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
+        return {'sid': sid}
+
+        
 
     @aiohttp_jinja2.template('full_rank.html')
     async def full_rank (self, request):
@@ -219,6 +205,26 @@ async def connect(soid, environ):
 async def message (soid, msg):
     print(soid, "msg ", msg)
 
+
+@sio.on('upload_test')
+async def upload_test (soid, data):
+    sid, info, is_pass = str(data['sid']), data['info'], int(data['is_pass'])
+    print(data)
+    if is_pass:
+        subprocess.Popen('mv tem_code/{}.py user_code/{}.py'.format(sid, sid), shell=True)
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute("SELECT update_times FROM users where sid='{}' and submit_time is not null".format(sid))
+                row = await cursor.fetchone()
+                if row:
+                    await cursor.execute("update users set last_update=current_timestamp, update_times={} where sid='{}'".format(int(row[0]) + 1, sid))
+                else:
+                    await cursor.execute("update users set submit_time=current_timestamp, last_update=current_timestamp where sid='{}'".format(sid))
+                    global score_info
+                    score_info[sid]['score'] = -10
+        await update_all_list()
+    await sio.emit('error', {'type': 3, 'info': info}, room=sid + str(1))
+    await sio.emit('error', {'type': 3, 'info': info}, room=sid + str(-1))
 
 @sio.on('watch')
 async def watch (soid, data):

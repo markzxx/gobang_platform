@@ -357,8 +357,11 @@ function handlebarsUserList(userList) {
     }
     if (parseInt(now_rank) > 10) {
         user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'>" +
-            '<tr class="info"><td>' + (now_rank) + '</td><td><p class="user-id">' + now_sid + '</p></td>' + '<td><p class="user-score">' + now_score + '</p></td><td>Yourself</td>' + '</tr>' +
-            "</tr>";
+            '<tr class="info"><td>' + (now_rank) + '</td><td><p class="user-id">' + now_sid + '</p></td>' + '<td><p class="user-score">' + now_score + '</p></td>';
+        if (parseInt(now_score) == -20)
+            user_rank_html += '<td>No code</td>' + '</tr></tr>';
+        else
+            user_rank_html += '<td><button class="label user-status" id="' + now_sid + '" >play</button></td></tr>';
     }
 
     $('#rank_table').html(user_rank_html);

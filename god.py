@@ -156,12 +156,11 @@ class God(object):
             if pos[0] < 0 or pos[0] >= self.chessboard_size or pos[1] < 0 or pos[1] >= self.chessboard_size:
                 self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is out of bound.\n'
                 self.finish = True
-                return True
         
             if self.chessboard[pos[0], pos[1]] != 0:
                 self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is not empty.\n'
                 self.finish = True
-                return True
+
         except Exception:
             self.fail_step(color=color)
             god.error = traceback.format_exc()
@@ -379,3 +378,6 @@ if __name__ == '__main__':
         socketIO.disconnect()
 
     socketIO.wait(seconds=600)
+    finish_data = begin_data + [0, 0]
+    socketIO.emit("finish", finish_data)
+    socketIO.wait(seconds=1)
