@@ -201,6 +201,8 @@ function stopPlay() {
 
 function playWith(sid) {
     // $('.user-status').removeClass('label_active');
+    if (!IS_GAME_OVER)
+        return;
     var bnt = $('#' + sid);
     var all_bnt = $(".user-status");
     var player = $('#sid').data('id');

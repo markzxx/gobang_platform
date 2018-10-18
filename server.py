@@ -116,12 +116,12 @@ class Http_handler:
                     break
                 size += len(chunk)
                 f.write(chunk)
-                if size > 1024**2:
+                if size > 10 * 1024 ** 2:
                     return {'sid': sid, 'error': "Your code can not excess 1M."}
 
         #test code
         subprocess.Popen("python code_check_test.py tem_code {}".format(sid), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
-        return {'sid': sid}
+        raise web.HTTPFound('/')
 
         
 
@@ -371,14 +371,13 @@ async def finish (soid, data):  # data[player, tag, winner, loser]
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
         await update_game_log(game_id, data[2], data[3])
-        await update_all_list(data[2], data[3])
         if 'god' in games[game_id]:
             await sio.emit('finish', 0, games[game_id]['god'])
         games[game_id]['winner'] = data[2]
         players[player][tag]['status'] = 0
         print('finish', {'player': player, 'winner': data[2], 'game_id': game_id})
-        if player + str(tag) in watching_room:
-            await sio.emit('finish', {'winner': data[2], 'game_id': game_id}, room=player + str(tag))
+        await sio.emit('finish', {'winner': data[2], 'game_id': game_id}, room=player + str(tag))
+        await update_all_list(data[2], data[3])
         
 @sio.on('error_finish')
 async def d_error_finish (soid, data):
@@ -421,6 +420,8 @@ async def order (soid, data):
         await sio.emit('error', {'type': 3, 'info': params['message']})
     elif order == 'check_games':
         await sio.emit('check_games', games, soid)
+    elif order == 'check_players':
+        await sio.emit('check_players', players, soid)
     elif order == 'update_rank':
         global max_game_id
         max_game_id = 0

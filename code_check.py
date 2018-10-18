@@ -21,7 +21,7 @@ class CodeCheck():
         self.script_file_path = script_file_path
         self.chessboard_size = chessboard_size
         self.agent = None
-        self.errormsg = 'Error'
+        self.errormsg = ''
         # sys.stdout = open(os.devnull, 'w')
         # sys.stderr = open(os.devnull, 'w')
         # print(self.chessboard)
@@ -41,17 +41,17 @@ class CodeCheck():
             timeout(self.time_out)(self.time_out_init)()
             # self.time_out_init()
         except Exception:
-            self.errormsg = "Your code fail to init."
+            self.errormsg = "Your code fail to init." + traceback.format_exc()
             return False
     
         # check simple condition
         if not self.__check_simple_chessboard():
-            self.errormsg = "Your code can not pass base test."
+            self.errormsg = "Your code can not pass usability test." + self.errormsg
             return False
     
         # check advance condition, online test contain more test case than this demo
         if not self.__check_advance_chessboard():
-            self.errormsg = "Your code is too weak, fail to pass advance test."
+            self.errormsg = "Your code is too weak, fail to pass advance test." + self.errormsg
             return False
 
         return True
@@ -81,10 +81,14 @@ class CodeCheck():
         return True
     
     def __check_result (self, chessboard, result):
-        if not self.__check_go(chessboard):
-            return False
-        if not self.agent.candidate_list or list(self.agent.candidate_list[-1]) not in result:
-            print(list(self.agent.candidate_list[-1]))
+        try:
+            if not self.__check_go(chessboard):
+                return False
+            if not self.agent.candidate_list or list(self.agent.candidate_list[-1]) not in result:
+                print('user go:', list(self.agent.candidate_list[-1]))
+                return False
+        except Exception:
+            self.errormsg = traceback.format_exc()
             return False
         return True
         

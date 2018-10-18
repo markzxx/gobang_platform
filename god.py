@@ -77,8 +77,8 @@ def deal_with_memory_out(size):
             # print("winner: ",god.color_user_map[0])
 
     finish_data = begin_data + [winner, failer]
-    socketIO.emit("error", [player, memory_message])
     socketIO.emit("finish", finish_data)
+    socketIO.emit("error", [player, memory_message])
     socketIO.wait(seconds=1)
     socketIO.disconnect()
 
@@ -132,38 +132,37 @@ class God(object):
         self.player = player
         self.tag = tag
         self.begin = [player, tag]
-        white_path = os.path.join(file_dic, white + '.py')
-        black_path = os.path.join(file_dic, black + '.py')
+
         try:
             if 'human' not in white:
                 self.white = importlib.import_module(file_dic + '.' + white).AI(self.chessboard_size, 1, self.time_out)
         except Exception:
             self.fail_step(color=1)
-            self.error = traceback.format_exc()
+            self.error = str(white) + ' init fail.' + traceback.format_exc()
     
         try:
             if 'human' not in black:
                 self.black = importlib.import_module(file_dic + '.' + black).AI(self.chessboard_size, -1, self.time_out)
         except Exception:
             self.fail_step(color=-1)
-            self.error = traceback.format_exc()
+            self.error = str(black) + ' init fail.' + traceback.format_exc()
 
         self.user_color_map = {white: 1, black: -1}
-        self.color_user_map = {1: white, -1: black, 0: 0}
+        self.color_user_map = {1: str(white), -1: str(black), 0: 0}
 
     def check_chess(self, pos, color):
         try:
             if pos[0] < 0 or pos[0] >= self.chessboard_size or pos[1] < 0 or pos[1] >= self.chessboard_size:
                 self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is out of bound.\n'
-                self.finish = True
+                self.finish = begin_data + [self.color_user_map[-color], self.color_user_map[color]]
         
             if self.chessboard[pos[0], pos[1]] != 0:
                 self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is not empty.\n'
-                self.finish = True
+                self.finish = begin_data + [self.color_user_map[-color], self.color_user_map[color]]
 
         except Exception:
             self.fail_step(color=color)
-            god.error = traceback.format_exc()
+            god.error = str(self.color_user_map[color]) + ' error.' + traceback.format_exc()
         
 
     def check_chess_board (self, pos, color):
@@ -195,13 +194,13 @@ class God(object):
                     count = 0
                 # print('count', count, pos, color, chess_pos, chessboard[chess_pos[0], chess_pos[1]])
                 if count == 5:
-                    self.finish = True
+                    self.finish = begin_data + [self.color_user_map[color], self.color_user_map[-color]]
                     self.winner = color
                     return
     
         if len(np.where(self.chessboard == 0)[0]) == 0:
-            self.finish = True
             self.winner = 0
+            self.finish = begin_data + [0, 0]
 
     def self_update(self, x, y, color):
         pos = (x, y)
@@ -212,8 +211,6 @@ class God(object):
         self.check_chess_board(pos, color)
         
     def update(self, color):
-        assert self.chessboard.all()<2 and self.chessboard.all()>-2
-
         agent = self.white if color == 1 else self.black
         try:
             timeout(self.time_out)(agent.go)(np.copy(self.chessboard))  # timeout(god.time_out)(self.white.go)(self.last_pos)#--------------------------------------------------------
@@ -225,7 +222,7 @@ class God(object):
             pass
         except Exception:
             self.fail_step(color=color)
-            god.error = traceback.format_exc()
+            god.error = str(self.color_user_map[color]) + ' error.' + traceback.format_exc()
             return
             
         tem_list = agent.candidate_list
@@ -246,10 +243,9 @@ class God(object):
 
     def fail_step(self, color):
         self.winner = -color
-        self.finish = True
+        self.finish = begin_data + [self.color_user_map[self.winner], self.color_user_map[-self.winner]]
 
     def memory_fail(self, message):
-        self.finish = True
         p1 = str(self.color_user_map[-1])
         p2 = str(self.color_user_map[1])
         wrong_play = ''
@@ -264,7 +260,7 @@ class God(object):
             self.error+= " Memory error message error in trackback MemoryError"
         else:
             self.error +=" Other error in trackback MemoryError"
-
+        self.finish = begin_data + [winner_play, wrong_play]
         if wrong_play or winner_play:
             assert winner_play and wrong_play
             self.error += " Dear " + wrong_play + ": Memory out"
@@ -308,24 +304,20 @@ def fight (begin_data):
 
             if player_time[tem_color] > total_time:
                 god.fail_step(tem_color)
-                god.error = player[tem_color] + ' excess total time.'
-            if god.finish: break
+                god.error = str(god.color_user_map[tem_color]) + ' excess total time.'
+            if god.error:
+                break
             go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
             socketIO.emit("go", go_data)
+            if god.finish:
+                break
             #print(go_data)
 
-    finish_data = begin_data + [god.color_user_map[god.winner], god.color_user_map[-god.winner]]
-
+    socketIO.emit("finish", god.finish)
     if god.error:
         error_data = begin_data + [god.error]
         socketIO.emit("error", error_data)
         #print(error_data)
-    else:
-        go_data = begin_data + deal_go_data([god.last_pos[0], god.last_pos[1], tem_color])
-        #print(go_data)
-        socketIO.emit("go", go_data)
-    
-    socketIO.emit("finish", finish_data)
 
 
 if __name__ == '__main__':
@@ -363,9 +355,9 @@ if __name__ == '__main__':
 
 
     except Exception:
-        socketIO.emit("error", begin_data + [traceback.format_exc()])
-        finish_data = begin_data + [0, 0]
-        socketIO.emit("finish", finish_data)
+        god.finish = begin_data + [0, 0]
+        socketIO.emit("error", begin_data + ['Platfrom error,please contact administrator. ' + traceback.format_exc()])
+        socketIO.emit("finish", god.finish)
 
     if god.finish:
         while True:
@@ -374,10 +366,9 @@ if __name__ == '__main__':
                 break
             except Exception:
                 print(traceback.format_exc())
+        socketIO.emit("finish", god.finish)
         socketIO.wait(seconds=1)
         socketIO.disconnect()
+        socketIO.wait(seconds=1)
 
     socketIO.wait(seconds=600)
-    finish_data = begin_data + [0, 0]
-    socketIO.emit("finish", finish_data)
-    socketIO.wait(seconds=1)
