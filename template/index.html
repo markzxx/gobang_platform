@@ -127,7 +127,8 @@
         <div class="play_chess">
           <div class="header_pannel">
             <div class="col-md-3">
-              <button type="button" data-id="{{sid}}" data-name="play" class="btn btn-success" id="play" style="float:left;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i>&nbsp;Play</button>
+                <button type="button" data-id="{{sid}}" data-name="play" class="btn btn-success" id="play" style="float:left;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i>&nbsp;Auto Play</button>
+                <br>
             </div>
             <div class="col-md-6">
                 <button type="button" class="record btn btn-default" id="start"><i class="glyphicon glyphicon-step-backward"></i></button>
@@ -138,9 +139,11 @@
                 <button type="button" class="record btn btn-default" id="big-right"><i class="glyphicon glyphicon-forward"></i></button>
                 <button type="button" class="record btn btn-default" id="end"><i class="glyphicon glyphicon-step-forward"></i></button>
               <input class="range" type="range" id="range" style="display:none;" max="100" width="80%" />
+                <button type="button" name="download" id="download" class="btn btn-default" data-toggle="modal" data-target="#info-modal-box" style="color:white;background-color:#1ABC9C;">Download Chess Data</button>
             </div>
             <div class="col-md-3">
-              <button type="button" name="download" id="download" class="btn btn-default" data-toggle="modal" data-target="#info-modal-box" style="color:white;background-color:#1ABC9C;">Download Chess Data</button>
+                <input id="opponent" placeholder="opponent id" style="width:120px;height:40px;border:1px #908a90 solid;padding:10px;">
+                <button type="button" class="btn btn-success" id="playto" style="float:right;font-size:1em;background-color:#1ABC9C;"><i class="glyphicon glyphicon-play-circle"></i>&nbsp;playto</button>
             </div>
           </div>
           <div class="content_pannel">
@@ -173,14 +176,13 @@
             <div class="col-md-4" style="text-align:right;">
               <div class="upload_code">
                 <button class="btn btn-primary" type="button" onclick="$('#code').trigger('click');" id="trigger_code" name="trigger_code" style="background-color:#1ABC9C;"><i class="glyphicon glyphicon-upload"></i>&nbsp;Upload Code</button>
-
-                <form action="upload" method="post" accept-charset="utf-8" enctype="multipart/form-data" style="display:none">
+                  <form id="codeform" action="upload" method="post" accept-charset="utf-8" enctype="multipart/form-data" style="display:none">
                   <p id='watch_id' data-id={{sid}} visibility=false></p>
                   <span>Upload Your Code (only one .py file is required)</span>
                   <input type="file" id="code" name="code" style="visibility:hidden" onchange="filepath.value=this.value;$('#upload_submit').trigger('click');">
                   <input type="textfield" id="filepath">
-                  <input type="button" id="filebutton" value="choose file" onclick="code.click()">
-                  <input type="submit" id="upload_submit" name="upload_submit" value="submit" />
+                      <!--<input type="button" id="filebutton" value="choose file" onclick="code.click()">-->
+                      <input type="button" id="upload_submit" name="upload_submit" value="submit"/>
                 </form>
               </div>
             </div>
@@ -208,6 +210,10 @@
         <!-- /.modal-content -->
       </div>
       <!-- /.modal-dialog -->
+        <form id="myForm">
+            <input type="file" id="u_photo" name="u_photo"/>
+            <input type="button" id="submit-btn" value="上传"/>
+        </form>
     </div>
     <!-- /.modal -->
     <!-- /.modal -->
@@ -238,7 +244,8 @@
 								easingType: 'linear'
 					 		};
 							*/
-      if($('#sid').data('error'))
+
+        if($('#sid').data('error'))
           alert($('#sid').data('error'));
       $().UItoTop({
         easingType: 'easeOutQuart'

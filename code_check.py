@@ -98,15 +98,16 @@ class CodeCheck():
             return False
     
         # only one empty position remain
-        chessboard = np.ones((self.chessboard_size, self.chessboard_size))
-        chessboard[:, ::2] = -1
-        for i in range(0, self.chessboard_size, 4):
-            chessboard[i] = -chessboard[i]
-        x, y = np.random.choice(self.chessboard_size, 2)
-        chessboard[x, y] = 0
+        for j in range(5):
+            chessboard = np.ones((self.chessboard_size, self.chessboard_size))
+            chessboard[:, ::2] = -1
+            for i in range(0, self.chessboard_size, 4):
+                chessboard[i] = -chessboard[i]
+            x, y = np.random.choice(self.chessboard_size, 2)
+            chessboard[x, y] = 0
     
-        if not self.__check_result(chessboard, [[x, y]]):
-            return False
+            if not self.__check_result(chessboard, [[x, y]]):
+                return False
 
         return True
     

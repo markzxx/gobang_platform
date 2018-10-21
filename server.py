@@ -193,7 +193,7 @@ async def update_chess_log (game_id):
 
 
 async def push_game (player, tag, soid=None):
-    if soid or (player + str(tag) in watching_room):
+    if soid or ((player + str(tag)) in watching_room):
         await sio.emit('push_game', games[players[player][tag]['id']], room=soid if soid else player + str(tag))
 
 
@@ -224,7 +224,7 @@ async def upload_test (soid, data):
                     score_info[sid]['score'] = -10
         await update_all_list()
     await sio.emit('error', {'type': 3, 'info': info}, room=sid + str(1))
-    await sio.emit('error', {'type': 3, 'info': info}, room=sid + str(-1))
+    await sio.emit('error', {'type': 3, 'info': info}, room=sid + str(1))
 
 @sio.on('watch')
 async def watch (soid, data):
@@ -254,7 +254,7 @@ async def self_play(soid, data):
 
     idx = find_rank(AI)
     if rank_info[idx]['score'] == -20:
-        await sio.emit('error', {'type': 3, 'info': "Please upload your code again."}, soid)
+        await sio.emit('error', {'type': 3, 'info': "This code has error."}, soid)
         return
     if tag > 0:
         await self_begin(player, tag, AI, 'human-' + player)
@@ -275,7 +275,7 @@ async def self_begin (player, tag, white, black):
     games[game_id] = {'white': white, 'black': black, "chess_log": [], 'game_id': game_id, "type": 2}
     await push_game(player, tag)
     print(white, black, player, tag)
-    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
+    subprocess.Popen('python god.py user_code {} {} {} {} {} {} 0'.format(white, black, 15, 1, player, tag), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
     
 @sio.on('self_register')
 async def self_register (soid, data):
@@ -302,16 +302,34 @@ async def self_go (soid, data):  # data[player1, tag, x, y, color]
             await sio.emit('go', data[2:], room=player + str(tag))
 
 @sio.on('self_finish')
-async def self_finish (soid, data):  # data[player, tag, winner, loser]
+async def self_finish (soid, data):  # data[player, tag, type, winner, loser]
     player = str(data[0])
     tag = int(data[1])
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
-        games[game_id]['winner'] = data[2]
+        games[game_id]['winner'] = data[3]
         players[player][tag]['status'] = 0
         if player + str(tag) in watching_room:
-            await sio.emit('finish', {'winner': data[2], 'game_id': game_id}, room=player + str(tag))
-        
+            await sio.emit('finish', {'winner': data[3], 'game_id': game_id}, room=player + str(tag))
+
+
+@sio.on('test_play')
+async def play (soid, data):
+    if not downinfo['can_play']:
+        await sio.emit('error', {'type': 3, 'info': downinfo['message']}, soid)
+        return
+    player1 = str(data['player'])
+    tag = int(data['tag'])
+    player2 = str(data['opponent'])
+    print(player1, 'test play', player2)
+    idx1 = find_rank(player1)
+    idx2 = find_rank(player2)
+    if idx1 == -20 or idx2 == -20:
+        await sio.emit('error', {'type': 3, 'info': "One of you have no valid code"}, soid)
+        return
+    await begin(player1, -tag, player1, player2, 0)
+    await begin(player1, tag, player2, player1, 0)
+    
 @sio.on('play')
 async def play (soid, data):
     if not downinfo['can_play']:
@@ -319,14 +337,13 @@ async def play (soid, data):
         return
     player = str(data['player'])
     tag = int(data['tag'])
-    print(player, "play", tag)
+    print(player, "play")
     if players[player][tag]['status'] and players[player][tag]['id'] < 10 ** 10 or players[player][-tag]['status'] and players[player][-tag]['id'] < 10 ** 10:
         await sio.emit('error', {'type': 1, 'info': 'Another color is not finished yet.'}, soid)
         return
     else:
         await error_finish(soid, {'player': player, 'tag': tag, 'new_game': 1})
         await error_finish(soid, {'player': player, 'tag': -tag, 'new_game': 1})
-
     idx = find_rank(player)
     if rank_info[idx]['score'] == -20:
         await sio.emit('error', {'type': 3, 'info': "You have not uploaded user_code."}, soid)
@@ -336,12 +353,11 @@ async def play (soid, data):
     else:
         player2 = rank_info[idx - 1]['sid']
     player1 = player
-    await begin(player, -tag, player1, player2)
-    await begin(player, tag, player2, player1)
-    # await begin(player2, player1)
+    await begin(player, -tag, player1, player2, 1)
+    await begin(player, tag, player2, player1, 1)
 
 
-async def begin (player, tag, white, black):
+async def begin (player, tag, white, black, type):
     old_game_id = players[player][tag]['id']
     if old_game_id in games:
         del games[old_game_id]
@@ -352,32 +368,39 @@ async def begin (player, tag, white, black):
     players[player][tag]['status'] = 1
     games[game_id] = {'white': white, 'black': black, "chess_log": [], 'game_id': game_id, "type": 1}
     await push_game(player, tag)
-    subprocess.Popen('python god.py user_code {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
+    subprocess.Popen('python god.py user_code {} {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag, type), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
 
 @sio.on('go')
 async def go (soid, data):  # data[player, tag, x, y, color]
     player = str(data[0])
     tag = int(data[1])
+    x = data[3]
+    y = data[4]
+    color = data[5]
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
-        games[game_id]['chess_log'].append((game_id, data[2], data[3], data[4]))
+        games[game_id]['chess_log'].append((game_id, x, y, color))
         if player + str(tag) in watching_room:
-            await sio.emit('go', data[2:], room=player + str(tag))
+            await sio.emit('go', data[3:], room=player + str(tag))
         
 @sio.on('finish')
 async def finish (soid, data):  # data[player, tag, winner, loser]
     player = str(data[0])
     tag = int(data[1])
+    type = int(data[2])
+    winner = str(data[3])
+    loser = str(data[4])
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
-        await update_game_log(game_id, data[2], data[3])
+        if type == 1:
+            await update_game_log(game_id, winner, loser)
+            await update_all_list(winner, loser)
         if 'god' in games[game_id]:
             await sio.emit('finish', 0, games[game_id]['god'])
-        games[game_id]['winner'] = data[2]
+        games[game_id]['winner'] = winner
         players[player][tag]['status'] = 0
-        print('finish', {'player': player, 'winner': data[2], 'game_id': game_id})
-        await sio.emit('finish', {'winner': data[2], 'game_id': game_id}, room=player + str(tag))
-        await update_all_list(data[2], data[3])
+        print('finish', {'player': player, 'winner': winner, 'game_id': game_id})
+        await sio.emit('finish', {'winner': winner, 'game_id': game_id}, room=player + str(tag))
         
 @sio.on('error_finish')
 async def d_error_finish (soid, data):
@@ -405,9 +428,9 @@ async def error_finish (soid, data):
                 await sio.emit('error_finish', 0, room=player + str(tag))
 
 @sio.on('error')
-async def error (soid, data):  # data[player, tag, msg]
+async def error (soid, data):  # data[player, tag, type, msg]
     sleep(0.3)
-    await sio.emit('error', {'type': 2, 'info': data[2]}, room=str(data[0]) + str(data[1]))
+    await sio.emit('error', {'type': 2, 'info': data[3]}, room=str(data[0]) + str(data[1]))
 
 
 @sio.on('order')
@@ -476,7 +499,7 @@ def disconnect(soid):
 
 async def init_pool ():
     global pool
-    pool = await aiomysql.create_pool(host='127.0.0.1', port=3307, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True, minsize=1, maxsize=100)
+    pool = await aiomysql.create_pool(host='10.20.96.148', port=3307, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True, minsize=1, maxsize=100)
     await init_list()
     
 if __name__ == '__main__':

@@ -15,7 +15,7 @@ class Namespace(BaseNamespace):
 
 
 socketIO = SocketIO('10.20.96.148', 8080, Namespace)
-socketIO.emit("order", {'order': 'down', 'params': {'can_play': False, 'message': "Rank race over! The system will reopen at 18 Oct."}})
+socketIO.emit("order", {'order': 'down', 'params': {'can_play': False, 'message': "System is updating."}})
 # socketIO.emit("order", {'order':'down', 'params':{'can_play': True, 'message': "System update success."}})
 # socketIO.emit("order", {'order': 'update_rank', 'params': 0})
 # socketIO.emit("order", {'order': "check_games", 'params': 0})

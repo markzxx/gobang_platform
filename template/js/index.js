@@ -161,6 +161,7 @@ function clientSocket(socket) {
     });
 
     socket.on('error', function (info) {
+        console.log(info);
         if (info.type == 1) {
             $("#info-modal-box-msg").html("<p>Error, " + info.info + "</p><button type=\"button\" id=\"error_finish\">Click here to force finish.</button>");
             $('#error_finish').click(function () {
@@ -193,6 +194,7 @@ function stopPlay() {
     switchStatus(all_user, 'play', 'gaming-status');
     all_user.removeAttr("disabled");
     $('#play').removeAttr("disabled");
+    $('#playto').removeAttr("disabled");
     $('.record').removeAttr("disabled");
     IS_CAN_STEP = false;
     IS_GAME_OVER = true;
@@ -220,6 +222,21 @@ function playWith(sid) {
     }
 }
 
+function playto(sid, type) {
+    stopPlay();
+    $('#play').attr("disabled", "disabled");
+    $('#playto').attr("disabled", "disabled");
+    $('.record').attr("disabled", "disabled");
+    $(".user-status").attr("disabled", "disabled");
+    var player = $('#sid').data('id');
+    IS_GAME_OVER = false;
+    IS_CAN_STEP = false;
+    if (type == 1)
+        socket.emit('play', {'player': player, 'tag': 1});
+    else
+        socket.emit('test_play', {'player': player, 'tag': 1, 'opponent': sid});
+}
+
 function watch() {
     socket.emit('watch', getinfo());
 }
@@ -233,6 +250,25 @@ function bindButtonClick(socket) {
         drawPiece(x, y);
     });
 
+    //上传代码
+    $("#upload_submit").on('click', function () {
+        var file = new FormData($("#codeform")[0]);
+        console.log(file);
+        $.ajax({
+            url: "/upload",
+            type: "post",
+            data: file,
+            //十分重要，不能省略
+            cache: false,
+            processData: false,
+            contentType: false,
+            success: function () {
+                $("#info-modal-box-msg").html("<p>Your code is testing····</p>");
+                $("#info-modal-box").modal("show");
+            }
+        });
+    });
+
     //动态设置ranklist高度
     // $(".rank_list").css("top",$(".play_chess").offset().top+"px");
 
@@ -242,16 +278,15 @@ function bindButtonClick(socket) {
         watch();
     });
 
-    //开始比赛
+    //自动匹配比赛
     $('#play').click(function () {
-        stopPlay();
-        $(this).attr("disabled", "disabled");
-        $('.record').attr("disabled", "disabled");
-        $(".user-status").attr("disabled", "disabled");
-        var player = $('#sid').data('id');
-        IS_GAME_OVER = false;
-        IS_CAN_STEP = false;
-        socket.emit('play', {'player': player, 'tag': 1});
+        playto(0, 1);
+    });
+
+    //指定对手比赛
+    $('#playto').click(function () {
+        console.log($('#opponent').val());
+        playto($('#opponent').val(), 0);
     });
 
     //复盘系统

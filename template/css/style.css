@@ -239,8 +239,7 @@ h3.tittle {
 
 .header_pannel {
   width: 100%;
-  padding: 0;
-  height: 75px;
+    min-height: 100px;
   background: #f9f9f9;
   padding: 2%;
   text-align: center;

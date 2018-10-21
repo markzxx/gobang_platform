@@ -120,7 +120,7 @@ class Namespace(BaseNamespace):
             socketIO.disconnect()
 
 class God(object):
-    def __init__ (self, file_dic, player, tag, white, black, chessboard_size, time_out):
+    def __init__ (self, file_dic, player, tag, white, black, chessboard_size, time_out, begin):
     
         self.error = ""
         self.chessboard_size = chessboard_size
@@ -131,7 +131,7 @@ class God(object):
         self.last_pos = (-1, -1)
         self.player = player
         self.tag = tag
-        self.begin = [player, tag]
+        self.begin = begin
 
         try:
             if 'human' not in white:
@@ -153,11 +153,11 @@ class God(object):
     def check_chess(self, pos, color):
         try:
             if pos[0] < 0 or pos[0] >= self.chessboard_size or pos[1] < 0 or pos[1] >= self.chessboard_size:
-                self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is out of bound.\n'
+                self.error = self.error + "Dear {}: your postion is {}, which is out of bound.\n".format(self.color_user_map[color], pos)
                 self.finish = begin_data + [self.color_user_map[-color], self.color_user_map[color]]
         
             if self.chessboard[pos[0], pos[1]] != 0:
-                self.error = self.error + "Dear " + str(self.color_user_map[color]) + ' : your postion of last chess is not empty.\n'
+                self.error = self.error + "Dear {}: your postion is {}, which is not empty.\n".format(self.color_user_map[color], pos)
                 self.finish = begin_data + [self.color_user_map[-color], self.color_user_map[color]]
 
         except Exception:
@@ -327,8 +327,8 @@ if __name__ == '__main__':
         return go_data
 
     socketIO = SocketIO('localhost', 8080, Namespace)
-    sys.stdout = open(os.devnull, 'w')
-    sys.stderr = open(os.devnull, 'w')
+    # sys.stdout = open(os.devnull, 'w')
+    # sys.stderr = open(os.devnull, 'w')
     arg_list = sys.argv
     file_dic = arg_list[1]
     white = arg_list[2]
@@ -338,10 +338,11 @@ if __name__ == '__main__':
     total_time = 180
     player = arg_list[6]
     tag = arg_list[7]
+    type = arg_list[8]
 
     memory_size = 100 * 1024 ** 2  # In bytes
-    god = God(file_dic, player, tag, white, black, size, time_interval)
-    begin_data = [player, tag]
+    begin_data = [player, tag, type]
+    god = God(file_dic, player, tag, white, black, size, time_interval, begin_data)
 
     try:
         if 'human' in white or 'human' in black:
