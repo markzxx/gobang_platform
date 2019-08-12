@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="static/img/login.ico">
+  <title>Rank</title>
+</head>
+<style>
+td {
+    max-width: 100px;
+    min-width: 30px;
+}
+</style>
+
+<body>
+<div>
+    <table border="1" cellpadding="5" cellspacing="5">
+        <tr>
+            <th>rank</th>
+            <th>score</th>
+        </tr>
+        {% for user in rank %}
+        <tr>
+            <td>{{loop.index}}</td>
+            <td>{{user.score}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+</body>
+
+</html>

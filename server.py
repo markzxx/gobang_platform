@@ -17,10 +17,11 @@ from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography import fernet
 
 import mail
+import config
 
 pool = None
 verify_map = {}
-downinfo = {'can_play': True, 'message': ""}
+downinfo = {'can_play': True, 'can_upload': True, 'message': "All race finish. Platform is close now."}
 
 class Http_handler:
     @aiohttp_jinja2.template('index.html')
@@ -29,15 +30,15 @@ class Http_handler:
         if 'sid' in session:
             return {'sid': session['sid']}
         else:
-            return aiohttp_jinja2.render_template('login.html', request, {})
-    
-    @aiohttp_jinja2.template('login.html')
+            raise web.HTTPFound('/login')
+
+    @aiohttp_jinja2.template('logout.html')
     async def logout(self, request):
         session = await get_session(request)
         if 'sid' in session:
             del session['sid']
         return {}
-        
+
     @aiohttp_jinja2.template('login.html')
     async def login(self, request):
         if request._method == "GET":
@@ -52,16 +53,13 @@ class Http_handler:
             async with conn.cursor() as cursor:
                 await cursor.execute("SELECT * FROM users where sid='{}'".format(data['sid']))
                 row = await cursor.fetchone()
-        if row and row[1] != data['pwd']:
-            return {'error': "Password wrong"}
-        elif not row:
+        if not row:
             return {'error': "Student Id not exist"}
-        # elif not row:
-        #     await db.execute("insert into users values({}, '{}', 0, 0, 0)".format(data['sid'], data['pwd']))
-        #     await db.commit()
+        elif row['password'] != data['pwd']:
+            return {'error': "Password wrong"}
         else:
             session['sid'] = data['sid']
-            return aiohttp_jinja2.render_template('index.html', request, {'sid': data['sid']})
+            raise web.HTTPFound('/')
 
     async def send_email (self, request):
         data = await request.post()
@@ -76,7 +74,7 @@ class Http_handler:
         verify_map[sid] = verify_code
         mail.send_verify_code(sid, verify_code)
         return web.Response(text="ok, please check your student email.")
-    
+
     @aiohttp_jinja2.template('resetpwd.html')
     async def resetpwd(self, request):
         if request._method == "GET":
@@ -95,12 +93,15 @@ class Http_handler:
                     return {'error': "Error: Wrong verify code."}
                 raise web.HTTPFound('/login')
     
-    @aiohttp_jinja2.template('index.html')
     async def upload(self, request):
         session = await get_session(request)
         if 'sid' not in session:
             raise web.HTTPFound('/login')
         sid = session['sid']
+        print(sid)
+        if not downinfo['can_upload']:
+            await upload_test(0, {'sid': sid, 'info': downinfo['message'], 'is_pass': False})
+            return {}
         reader = await request.multipart()
         field = await reader.next()
         assert field.name == 'code'
@@ -123,10 +124,12 @@ class Http_handler:
         subprocess.Popen("python code_check_test.py tem_code {}".format(sid), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
         raise web.HTTPFound('/')
 
-        
-
     @aiohttp_jinja2.template('full_rank.html')
     async def full_rank (self, request):
+        return {'rank': rank_info}
+
+    @aiohttp_jinja2.template('rank.html')
+    async def rank (self, request):
         return {'rank': rank_info}
     
 sio = socketio.AsyncServer()
@@ -141,6 +144,7 @@ app.add_routes([web.get('/', handler.index, name='index'),
                 web.post('/login', handler.login, name='login'),
                 web.get('/logout', handler.logout, name='logout'),
                 web.get('/full_rank', handler.full_rank, name='full_rank'),
+                web.get('/rank', handler.rank, name='rank'),
                 web.post('/upload', handler.upload, name='upload'),
                 web.post('/resetpwd', handler.resetpwd, name='reset'),
                 web.get('/resetpwd', handler.resetpwd, name='reset'),
@@ -152,6 +156,7 @@ setup(app, EncryptedCookieStorage(secret_key))
 rank_info = []
 score_info = {}
 max_game_id = 0
+rounder = None
 games = defaultdict(dict)
 watching_room = set()
 players = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -224,7 +229,7 @@ async def upload_test (soid, data):
                     score_info[sid]['score'] = -10
         await update_all_list()
     await sio.emit('error', {'type': 3, 'info': info}, room=sid + str(1))
-    await sio.emit('error', {'type': 3, 'info': info}, room=sid + str(1))
+    await sio.emit('error', {'type': 3, 'info': info}, room=sid + str(-1))
 
 @sio.on('watch')
 async def watch (soid, data):
@@ -315,23 +320,33 @@ async def self_finish (soid, data):  # data[player, tag, type, winner, loser]
 
 @sio.on('test_play')
 async def play (soid, data):
-    if not downinfo['can_play']:
-        await sio.emit('error', {'type': 3, 'info': downinfo['message']}, soid)
-        return
+    # if not downinfo['can_play']:
+    #     await sio.emit('error', {'type': 3, 'info': downinfo['message']}, soid)
+    #     return
     player1 = str(data['player'])
     tag = int(data['tag'])
     player2 = str(data['opponent'])
     print(player1, 'test play', player2)
     idx1 = find_rank(player1)
     idx2 = find_rank(player2)
-    if idx1 == -20 or idx2 == -20:
+    if idx1 == -1 or idx2 == -1:
         await sio.emit('error', {'type': 3, 'info': "One of you have no valid code"}, soid)
         return
     await begin(player1, -tag, player1, player2, 0)
     await begin(player1, tag, player2, player1, 0)
     
+@sio.on('round_play')
+async def round_play (soid, data):
+    global rounder
+    rounder = soid
+    player1 = str(data['player1'])
+    tag = int(data['tag'])
+    player2 = str(data['player2'])
+    print(player1, 'round play', player2)
+    await round_begin(player1, tag, player1, player2, 1)
+    
 @sio.on('play')
-async def play (soid, data):
+async def play(soid, data):
     if not downinfo['can_play']:
         await sio.emit('error', {'type': 3, 'info': downinfo['message']}, soid)
         return
@@ -361,7 +376,7 @@ async def begin (player, tag, white, black, type):
     old_game_id = players[player][tag]['id']
     if old_game_id in games:
         del games[old_game_id]
-        
+
     game_id = await add_game_log(white, black)
     print("begin", white, black, game_id)
     players[player][tag]['id'] = game_id
@@ -370,6 +385,31 @@ async def begin (player, tag, white, black, type):
     await push_game(player, tag)
     subprocess.Popen('python god.py user_code {} {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag, type), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
 
+
+async def round_begin (player, tag, white, black, type):
+    game_id = await add_game_log(white, black)
+    print("begin", white, black, game_id)
+    players[white][tag]['id'] = game_id
+    players[white][tag]['status'] = 1
+    players[black][-tag]['id'] = game_id
+    players[black][-tag]['status'] = 1
+    games[game_id] = {'white': white, 'black': black, "chess_log": [], 'game_id': game_id, "type": 1}
+    await push_game(white, tag)
+    await push_game(black, -tag)
+    subprocess.Popen('python god.py user_code {} {} {} {} {} {} {}'.format(white, black, 15, 1, player, tag, type), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
+
+# @sio.on('go')
+# async def go (soid, data):  # data[player, tag, x, y, color]
+#     player = str(data[0])
+#     tag = int(data[1])
+#     x = data[3]
+#     y = data[4]
+#     color = data[5]
+#     if players[player][tag]['status']:
+#         game_id = players[player][tag]['id']
+#         games[game_id]['chess_log'].append((game_id, x, y, color))
+#         if player + str(tag) in watching_room:
+#             await sio.emit('go', data[3:], room=player + str(tag))
 @sio.on('go')
 async def go (soid, data):  # data[player, tag, x, y, color]
     player = str(data[0])
@@ -380,8 +420,13 @@ async def go (soid, data):  # data[player, tag, x, y, color]
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
         games[game_id]['chess_log'].append((game_id, x, y, color))
-        if player + str(tag) in watching_room:
+        white = games[game_id]['white']
+        black = games[game_id]['black']
+        if str(white) + str(tag) in watching_room:
             await sio.emit('go', data[3:], room=player + str(tag))
+        if str(black) + str(-tag) in watching_room:
+            await sio.emit('go', data[3:], room=player + str(-tag))
+            
         
 @sio.on('finish')
 async def finish (soid, data):  # data[player, tag, winner, loser]
@@ -392,12 +437,15 @@ async def finish (soid, data):  # data[player, tag, winner, loser]
     loser = str(data[4])
     if players[player][tag]['status']:
         game_id = players[player][tag]['id']
+        game = games[game_id]
         if type == 1:
             await update_game_log(game_id, winner, loser)
             await update_all_list(winner, loser)
-        if 'god' in games[game_id]:
-            await sio.emit('finish', 0, games[game_id]['god'])
-        games[game_id]['winner'] = winner
+        if 'god' in game:
+            await sio.emit('finish', 0, game['god'])
+        if rounder:
+            await sio.emit('finish', {'white': game['white'], 'black': game['black']}, rounder)
+        game['winner'] = winner
         players[player][tag]['status'] = 0
         print('finish', {'player': player, 'winner': winner, 'game_id': game_id})
         await sio.emit('finish', {'winner': winner, 'game_id': game_id}, room=player + str(tag))
@@ -446,17 +494,14 @@ async def order (soid, data):
     elif order == 'check_players':
         await sio.emit('check_players', players, soid)
     elif order == 'update_rank':
-        global max_game_id
-        max_game_id = 0
-        await init_list()
+        await round_init_list()
 
 
-async def update_all_list (winner=0, loser=0):
+async def update_all_list(winner=0, loser=0):
     global rank_info
     if winner != loser:
         score_info[winner]['score'] += 5
-        if score_info[loser]['score'] >= 5:
-            score_info[loser]['score'] -= 5
+        score_info[loser]['score'] -= 5
     rank_info = [{'sid': k, 'name': v['name'], 'score': v['score']} for k, v in score_info.items()]
     rank_info.sort(key=lambda x: (x['score'], random.random()), reverse=True)
     await sio.emit('update_list', rank_info)
@@ -489,6 +534,32 @@ async def init_list ():
                 score_info[loser]['score'] -= 5
     await update_all_list()
 
+async def round_init_list ():
+    global score_info
+    score_info = {}
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute("SELECT sid, name, last_update FROM users where last_update is not null")
+            users = await cursor.fetchall()
+    for row in users:
+        if row['sid'] not in score_info:
+            score_info[row['sid']] = {'name': row['name'], 'score': 0}
+    
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute("SELECT winner, loser FROM game_log where start_time>'2018-10-27 16:00:00' and end_time is not null")
+            logs = await cursor.fetchall()
+    for row in logs:
+        winner = str(row['winner'])
+        loser = str(row['loser'])
+        if winner == loser:
+            continue
+        if winner in score_info:
+            score_info[winner]['score'] += 5
+        if loser in score_info:
+            score_info[loser]['score'] -= 5
+    await update_all_list()
+    
 @sio.on('update_list')
 async def update_one_list(soid, data):
     await sio.emit('update_list', rank_info, room=soid)
@@ -499,8 +570,8 @@ def disconnect(soid):
 
 async def init_pool ():
     global pool
-    pool = await aiomysql.create_pool(host='10.20.96.148', port=3307, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True, minsize=1, maxsize=100)
-    await init_list()
+    pool = await aiomysql.create_pool(host=config.host, port=config.port, user=config.db_user, password=config.db_password, db=config.db_name, loop=loop, autocommit=True, cursorclass=aiomysql.cursors.DictCursor)
+    await round_init_list()
     
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
