@@ -499,10 +499,11 @@ def disconnect(soid):
 
 async def init_pool ():
     global pool
-    pool = await aiomysql.create_pool(host='10.20.96.148', port=3307, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True, minsize=1, maxsize=100)
+    pool = await aiomysql.create_pool(host='localhost', port=3307, user='chess', password='chess123456', db='chess', loop=loop, autocommit=True, minsize=1, maxsize=100)
     await init_list()
     
 if __name__ == '__main__':
+    print("run")
     loop = asyncio.get_event_loop()
     loop.run_until_complete(init_pool())
     web.run_app(app)
