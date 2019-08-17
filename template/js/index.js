@@ -10,18 +10,18 @@ var range_max = 0;
 // 设置canvas的content的
 var ctx = null;
 
-var socket = io('http://10.20.96.148:8080');
+var socket = io('http://10.20.13.19:8080');
 // var socket = io('http://10.20.106.72:8080');
 // 棋盘坐标数组
 var arrPieces = [];
 var chess_log = null;
 
 $(document).ready(function () {
-    clientSocket(socket);
-    socket.emit('update_list', "update");
-    bindButtonClick(socket);
+    // clientSocket(socket);
+    // socket.emit('update_list', "update");
+    // bindButtonClick(socket);
     drawChessBoard();
-    watch();
+    // watch();
 });
 
 // 画出棋盘
@@ -368,7 +368,7 @@ function switchStatus(bnt, text, status) {
 // 加载在线用户列表(无分页)
 function handlebarsUserList(userList) {
     var now_sid = parseInt($("#sid").attr("data-id"));
-    var now_rank = 11;
+    var now_rank = 1000;
     var now_score = 0;
     var user_rank_html = '<tr><th colspan=4 style="text-align:center;cursor:default">RankList</th></tr><tr class="active"><th>#</th>' + '<th width="25%">Sid</th>' + '<th>Score</th>' + '<th>Status</th></tr>';
     var state = "";
@@ -395,7 +395,7 @@ function handlebarsUserList(userList) {
     if (parseInt(now_rank) > 10) {
         user_rank_html += "<tr class='active' id='page_box' style='text-align:center;'>" +
             '<tr class="info"><td>' + (now_rank) + '</td><td><p class="user-id">' + now_sid + '</p></td>' + '<td><p class="user-score">' + now_score + '</p></td>';
-        if (parseInt(now_score) == -20)
+        if (parseInt(now_rank) == 1000)
             user_rank_html += '<td>No code</td>' + '</tr></tr>';
         else
             user_rank_html += '<td><button class="label user-status" id="' + now_sid + '" >play</button></td></tr>';

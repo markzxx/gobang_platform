@@ -357,11 +357,11 @@ if __name__ == '__main__':
 
     except Exception:
         god.finish = begin_data + [0, 0]
-        socketIO.emit("error", begin_data + ['Platfrom error,please contact administrator. ' + traceback.format_exc()])
         socketIO.emit("finish", god.finish)
+        socketIO.emit("error", begin_data + ['Platform error, please contact administrator. ' + traceback.format_exc()])
 
     if god.finish:
-        while True:
+        while control_thread.is_alive():
             try:
                 stop_thread(control_thread)
                 break
@@ -370,6 +370,5 @@ if __name__ == '__main__':
         socketIO.emit("finish", god.finish)
         socketIO.wait(seconds=1)
         socketIO.disconnect()
-        socketIO.wait(seconds=1)
 
     socketIO.wait(seconds=600)

@@ -76,8 +76,9 @@ class CodeCheck():
             # self.agent.go(np.copy(chessboard))
             timeout(self.time_out)(self.agent.go)(np.copy(chessboard))
         except Exception:
-            self.errormsg = "Error:" + traceback.format_exc()
-            return False
+            if len(self.agent.candidate_list) == 0:
+                self.errormsg = "Error: Time out and candidate list empty." + traceback.format_exc()
+                return False
         return True
     
     def __check_result (self, chessboard, result):
