@@ -9,7 +9,7 @@ import time
 import traceback
 
 import numpy as np
-import psutil
+# import psutil
 import timeout_decorator
 from socketIO_client import SocketIO, BaseNamespace
 from timeout_decorator import timeout
@@ -41,7 +41,8 @@ def stop_thread(thread):
 
 
 def get_mem():
-    return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
+    # return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
+    return 0
 
 
 def deal_with_memory_out(size):

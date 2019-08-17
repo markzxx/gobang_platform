@@ -10,18 +10,18 @@ var range_max = 0;
 // 设置canvas的content的
 var ctx = null;
 
-var socket = io('http://10.20.13.19:8080');
+var socket = io('http://192.168.0.104:8080');
 // var socket = io('http://10.20.106.72:8080');
 // 棋盘坐标数组
 var arrPieces = [];
 var chess_log = null;
 
 $(document).ready(function () {
-    // clientSocket(socket);
-    // socket.emit('update_list', "update");
-    // bindButtonClick(socket);
+    clientSocket(socket);
+    socket.emit('update_list', "update");
+    bindButtonClick(socket);
     drawChessBoard();
-    // watch();
+    watch();
 });
 
 // 画出棋盘
