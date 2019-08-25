@@ -388,7 +388,7 @@
       <workItem from="1552638458760" duration="11000" />
       <workItem from="1552668925631" duration="193000" />
       <workItem from="1556787785788" duration="653000" />
-      <workItem from="1566738209808" duration="1968000" />
+      <workItem from="1566738209808" duration="2263000" />
     </task>
     <task id="LOCAL-00038" summary="更改密码提示">
       <created>1537689849372</created>
@@ -751,6 +751,31 @@
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
+        <entry key="1">
+          <value>
+            <State>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="structure">
+                    <value>
+                      <list>
+                        <option value="dir:D:/Desktop/人工智能/五子棋对战/gobang_platform/.idea" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
         <entry key="MAIN">
           <value>
             <State>
@@ -759,6 +784,11 @@
           </value>
         </entry>
       </map>
+    </option>
+    <option name="OPEN_TABS">
+      <set>
+        <option value="1" />
+      </set>
     </option>
     <option name="RECENT_FILTERS">
       <map>
