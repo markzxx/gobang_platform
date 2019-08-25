@@ -16,6 +16,3 @@ create table game_log
 (id INTEGER primary key AUTO_INCREMENT, white_sid varchar(12), black_sid varchar(12),
 start_time TIMESTAMP, end_time TIMESTAMP, winner varchar(12), loser varchar(12),
 FOREIGN KEY(white_sid) REFERENCES users(sid), FOREIGN KEY(black_sid) REFERENCES users(sid));
-
--- ≤Â»Î ˝æ›
-INSERT INTO game_log(white_sid, black_sid, start_time, end_time, winner, loser) VALUES ('test1', 'test1', 0, 0, 'test1', 'test1')
