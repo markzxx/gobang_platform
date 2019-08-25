@@ -3,6 +3,7 @@ import aiomysql
 import hashlib
 import config
 
+
 async def init_db ():
     pool = await aiomysql.create_pool(host=config.host, port=config.port, user=config.db_user, password=config.db_password, db=config.db_name, loop=loop, autocommit=True)
     

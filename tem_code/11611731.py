@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import time
 
 COLOR_BLACK=-1
 COLOR_WHITE=1
@@ -56,7 +55,7 @@ class AI(object):
         #pos_idx = random.randint((len(idx) - 1), (len(idx) - 1)/2)
 
 
-        pos_idx = random.randint(0, len(idx)-1)
+        pos_idx = random.randint(0, len(idx) - 1)
         new_pos = idx[pos_idx]
         self.candidate_list.append(new_pos)#最最最开始随便空位置下一个
         print("随")

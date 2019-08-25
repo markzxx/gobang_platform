@@ -10,8 +10,7 @@ var range_max = 0;
 // 设置canvas的content的
 var ctx = null;
 
-var socket = io('http://192.168.0.104:8080');
-// var socket = io('http://10.20.106.72:8080');
+var socket = io('http://106.53.77.175:8080');
 // 棋盘坐标数组
 var arrPieces = [];
 var chess_log = null;
@@ -51,18 +50,6 @@ function drawChessBoard() {
     }
 }
 
-// 画出棋子
-function drawPiece(i, j) {
-    // 当前游戏未结束且当前节点未落子
-    if (IS_CAN_STEP && arrPieces[i][j] === 0) {
-        // 画一个新棋子
-        // drawNewPiece(i, j, IS_BLACK);
-        color = IS_BLACK ? -1 : 1;
-        // chess_log.push([i,j,color]);
-        socket.emit('self_go', [$('#sid').data('id'), $('#chessboard').data('id'), i, j, color]);
-    }
-}
-
 //画一个棋子
 function drawNewPiece(i, j, isBlack) {
     var y = CHESSBOARD_MARGIN + i * CHESSBOARD_GRID + 1;
@@ -81,8 +68,11 @@ function drawNewPiece(i, j, isBlack) {
     ctx.fillStyle = grd;
     ctx.fill();
 
-    // 记录坐标落子情况
-    arrPieces[i][j] = isBlack ? -1 : 1;
+    if(arrPieces[i][j])
+        console.log('error',i,j,isBlack);
+    else
+        // 记录坐标落子情况
+        arrPieces[i][j] = isBlack ? -1 : 1;
 }
 
 
@@ -119,7 +109,7 @@ function clientSocket(socket) {
             if (gameInfo['winner'] == '0')
                 setGameStatus('Game draw!');
             else
-                setGameStatus('Game finished, ' + gameInfo['winner'] + ' WIN！');
+                setGameStatus('Game finished<br> ' + gameInfo['winner'] + ' WIN！');
             stopPlay();
         } else {
             setGameStatus('Game Going');
@@ -141,7 +131,7 @@ function clientSocket(socket) {
 
     socket.on('finish', function (info) {
         console.log(info);
-        if (info.game_id != CURRENT_GAME_ID)
+        if (info.game_id !== CURRENT_GAME_ID)
             return;
         $('#range').attr('max', chess_log.length);
         $('#range').val(chess_log.length);
@@ -150,7 +140,7 @@ function clientSocket(socket) {
         if (info.winner == 0)
             setGameStatus('Game draw!');
         else
-            setGameStatus('Game finished, ' + info.winner + ' WIN！');
+            setGameStatus('Game finished<br> ' + info.winner + ' WIN！');
         stopPlay();
     });
 
@@ -245,9 +235,12 @@ function watch() {
 function bindButtonClick(socket) {
     //绑定棋盘落子
     $('#chessboard').click(function (e) {
-        var y = Math.round((e.offsetX - CHESSBOARD_MARGIN) / CHESSBOARD_GRID);
-        var x = Math.round((e.offsetY - CHESSBOARD_MARGIN) / CHESSBOARD_GRID);
-        drawPiece(x, y);
+        let x = Math.round((e.offsetY - CHESSBOARD_MARGIN) / CHESSBOARD_GRID);
+        let y = Math.round((e.offsetX - CHESSBOARD_MARGIN) / CHESSBOARD_GRID);
+        if (IS_CAN_STEP && arrPieces[x][y] === 0) {
+            let color = IS_BLACK ? -1 : 1;
+            socket.emit('self_go', [$('#sid').data('id'), $('#chessboard').data('id'), x, y, color]);
+        }
     });
 
     //上传代码
@@ -413,7 +406,7 @@ function handlebarsUserList(userList) {
 
 // 设置游戏状态
 function setGameStatus(status) {
-    $('#current_status').html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + status);
+    $('#current_status').html(status);
 }
 
 // RankList分页实现

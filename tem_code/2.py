@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*
 import numpy as np
 import random
-import time
 
 COLOR_BLACK = -1
 COLOR_WHITE = 1

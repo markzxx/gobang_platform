@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import time
 
 COLOR_BLACK=-1
 COLOR_WHITE=1
@@ -27,7 +26,7 @@ class AI(object):
         #Here is the simplest sample:Random decision
         idx = np.where(chessboard == 0)
         idx = list(zip(idx[0], idx[1]))
-        pos_idx = random.randint(0, len(idx)-1)
+        pos_idx = random.randint(0, len(idx) - 1)
         new_pos = idx[pos_idx]
         #==============Find new pos========================================
         # Make sure that the position of your decision in chess board is empty. 

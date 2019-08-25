@@ -314,12 +314,6 @@ def fight (begin_data):
                 break
             #print(go_data)
 
-    socketIO.emit("finish", god.finish)
-    if god.error:
-        error_data = begin_data + [god.error]
-        socketIO.emit("error", error_data)
-        #print(error_data)
-
 
 if __name__ == '__main__':
     def deal_go_data(go_data):
@@ -369,6 +363,9 @@ if __name__ == '__main__':
             except Exception:
                 print(traceback.format_exc())
         socketIO.emit("finish", god.finish)
+        if god.error:
+            error_data = begin_data + [god.error]
+            socketIO.emit("error", error_data)
         socketIO.wait(seconds=1)
         socketIO.disconnect()
 
