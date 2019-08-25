@@ -2,18 +2,10 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="478cbe44-b178-4e09-83a2-19f7d1f9aa0c" name="web" url="http://10.20.96.148">
-        <fileTransfer host="10.20.96.148" port="22" rootFolder="/home/web" accessType="SFTP">
+      <webServer id="7a7347ac-6954-4bc4-8a27-805264da6ece" name="cloud" url="http://106.53.77.175">
+        <fileTransfer host="106.53.77.175" port="22" rootFolder="/home/ubuntu/gobang_platform" accessType="SFTP">
           <advancedOptions>
-            <advancedOptions dataProtectionLevel="Private" />
-          </advancedOptions>
-          <option name="port" value="22" />
-        </fileTransfer>
-      </webServer>
-      <webServer id="591a7f1e-5c83-42e5-bce2-a86adca3de2d" name="dbs01" url="http://10.20.106.72">
-        <fileTransfer host="10.20.106.72" port="22" rootFolder="/home/ZengXinXun/python_chess" accessType="SFTP">
-          <advancedOptions>
-            <advancedOptions dataProtectionLevel="Private" />
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
           <option name="port" value="22" />
         </fileTransfer>
