@@ -2,135 +2,130 @@
 <html lang="en" class="no-js">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="shortcut icon" href="static/img/login.ico">
-  <title>login</title>
-  <link rel="stylesheet" type="text/css" href="static/css/normalize.css" />
-  <link rel="stylesheet" type="text/css" href="static/css/demo.css" />
-  <link rel="stylesheet" href="static/css/jquery.jgrowl.min.css">
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="static/img/login.ico">
+    <title>login</title>
+    <link rel="stylesheet" type="text/css" href="static/css/normalize.css"/>
+    <link rel="stylesheet" type="text/css" href="static/css/demo.css"/>
+    <link rel="stylesheet" href="static/css/jquery.jgrowl.min.css">
 
-  <link rel="stylesheet" type="text/css" href="static/css/button.css" />
-  <link rel="stylesheet" type="text/css" href="static/css/component.css" />
-  <!--[if IE]>
-<script src="static/js/html5.js"></script>
-<![endif]-->
-  <style>
-    input::-webkit-input-placeholder {
-      color: rgba(0, 0, 0, 0.726);
-    }
+    <link rel="stylesheet" type="text/css" href="static/css/button.css"/>
+    <link rel="stylesheet" type="text/css" href="static/css/component.css"/>
+    <!--[if IE]>
+    <script src="static/js/html5.js"></script>
+    <![endif]-->
+    <style>
+        input::-webkit-input-placeholder {
+            color: rgba(0, 0, 0, 0.726);
+        }
 
-    input::-moz-placeholder {
-      /* Mozilla Firefox 19+ */
-      color: rgba(0, 0, 0, 0.726);
-    }
+        input::-moz-placeholder {
+            /* Mozilla Firefox 19+ */
+            color: rgba(0, 0, 0, 0.726);
+        }
 
-    input:-moz-placeholder {
-      /* Mozilla Firefox 4 to 18 */
-      color: rgba(0, 0, 0, 0.726);
-    }
+        input:-moz-placeholder {
+            /* Mozilla Firefox 4 to 18 */
+            color: rgba(0, 0, 0, 0.726);
+        }
 
-    input:-ms-input-placeholder {
-      /* Internet Explorer 10-11 */
-      color: rgba(0, 0, 0, 0.726);
-    }
+        input:-ms-input-placeholder {
+            /* Internet Explorer 10-11 */
+            color: rgba(0, 0, 0, 0.726);
+        }
 
-    .logo_box {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-    .login_msg{
-      display:none;
-      max-height:40px;
-      min-height:25px;
-      font-size:0.8em;
-      text-align: center;
-      color:#de2562;
-      padding:2%;
-    }
-  </style>
+        .logo_box {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .login_msg {
+            display: none;
+            max-height: 40px;
+            min-height: 25px;
+            font-size: 0.8em;
+            text-align: center;
+            color: #de2562;
+            padding: 2%;
+        }
+    </style>
 </head>
 
 <body>
-  <div class="container demo-1">
+<div class="container demo-1">
     <div class="content">
-      <div id="large-header" class="large-header">
-        <canvas id="demo-canvas"></canvas>
-        <div class="logo_box">
-          <h3>Artificial Intelligence</h3>
-          <form action="login" method="post" accept-charset="utf-8" onsubmit="return jsMd5();">
-            <div class="input_outer">
-              <span class="u_user"></span>
-              <input id="sid" title="sid" name="sid" type="text" class="text" value="" style="color: #000000 !important" placeholder="Student Id">
+        <div id="large-header" class="large-header">
+            <canvas id="demo-canvas"></canvas>
+            <div class="logo_box">
+                <h3>Artificial Intelligence</h3>
+                <form action="login" method="post" accept-charset="utf-8" onsubmit="return jsMd5();">
+                    <div class="input_outer">
+                        <span class="u_user"></span>
+                        <input id="sid" title="sid" name="sid" type="text" class="text" value=""
+                               style="color: #000000 !important" placeholder="Student Id">
+                    </div>
+                    <div class="input_outer">
+                        <span class="us_uer"></span>
+                        <input id="pwd" title="pwd" name="pwd" type="password" class="text"
+                               style="color: #000000 !important; position:absolute; z-index:100;" value=""
+                               placeholder="Password">
+                    </div>
+                    <div class="login_msg">
+                        <span>Error :</span>
+                        <span id="err_msg">Please Login.</span>
+                    </div>
+                    <div id="LOGIN" data-error="{{error}}" class="mb2">
+                        <button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted"
+                                type="submit" data-text="登录"><span>Login</span></button>
+                    </div>
+                    <div id="resetpwd" class="mb2">
+                        <button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted"
+                                type="button" data-text="重置密码"><span>Reset Password</span></button>
+                    </div>
+                    <!--<div id="help_text"><cite>Registration is closed, contact QQ565323034 for help.</cite></div>-->
+                </form>
             </div>
-            <div class="input_outer">
-              <span class="us_uer"></span>
-              <input id="pwd" title="pwd" name="pwd" type="password" class="text" style="color: #000000 !important; position:absolute; z-index:100;" value="" placeholder="Password">
-            </div>
-            <div class="login_msg">
-              <span>Error :</span>
-              <span id="err_msg">Please Login.</span>
-            </div>
-            <div id="LOGIN" data-error="{{error}}" class="mb2"><button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted" type="submit" data-text="登录"><span>Login</span></button></div>
-            <div id="resetpwd" class="mb2"><button class="act-but button button--rayen button--border-medium button--text-thin button--size-l button--inverted" type="button" data-text="重置密码"><span>Reset Password</span></button></div>
-            <!--<div id="help_text"><cite>Registration is closed, contact QQ565323034 for help.</cite></div>-->
-          </form>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- /container -->
-  <script src="static/js/TweenLite.min.js"></script>
-  <script src="static/js/EasePack.min.js"></script>
-  <script src="static/js/jquery.js"></script>
-  <script src="static/js/demo-1.js"></script>
-  <script src="static/js/jquery.jgrowl.min.js"></script>
-  <div style="text-align:center;">
-  </div>
-  <script src="static/js/md5.js"></script>
-  <script>
-   function open_msg(text){
-     $(".login_msg").css({"display":"block","opacity":"0%"});
-     $(".login_msg").animate({"opacity":"100%"},500)
-     $("#err_msg").html(text);
-     // console.log($('.login_msg').css("display"));
-     setTimeout("close_modal()",2000);
-   }
-
-   function close_modal(){
-     $(".login_msg").animate({"opcity":"0%"},500)
-     $(".login_msg").css("display","none");
-     $(".login_msg").html();
-   }
-        $(document).ready(function() {
-          // open_msg("HHHaa");
-           if($('#LOGIN').data('error'))
-           {
-             open_msg($('#LOGIN').data('error'));
-
-           }
-       });
-
-        $('#resetpwd').click(function() {
-          window.location.href = "resetpwd";
-        });
-
-        function jsMd5() {
-          var sid = document.getElementById("sid");
-          var pwd = document.getElementById("pwd");
-
-          if (pwd.value == "" || sid.value == "") {
-            open_msg("Please input your sid and pwd.")
-            return false;
-          }
-          pwd.value = md5(pwd.value);
-          return true;
+<!-- /container -->
+<script src="static/js/TweenLite.min.js"></script>
+<script src="static/js/EasePack.min.js"></script>
+<script src="static/js/jquery.js"></script>
+<script src="static/js/demo-1.js"></script>
+<script src="static/js/jquery.jgrowl.min.js"></script>
+<div style="text-align:center;">
+</div>
+<script src="static/js/md5.js"></script>
+<script>
+    $(document).ready(function () {
+        // open_msg("HHHaa");
+        if ($('#LOGIN').data('error')) {
+            alert($('#LOGIN').data('error'));
         }
-  </script>
+    });
+
+    $('#resetpwd').click(function () {
+        window.location.href = "resetpwd";
+    });
+
+    function jsMd5() {
+        var sid = document.getElementById("sid");
+        var pwd = document.getElementById("pwd");
+
+        if (pwd.value == "" || sid.value == "") {
+            alert("Please input your sid and pwd.")
+            return false;
+        }
+        pwd.value = md5(pwd.value);
+        return true;
+    }
+</script>
 </body>
 
 </html>

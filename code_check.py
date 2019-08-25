@@ -7,9 +7,10 @@ check the security and functionability of uploaded code
 """
 import imp
 import traceback
-
+import sys
 import numpy as np
 from timeout_decorator import timeout
+from socketIO_client import SocketIO
 
 from chess_case import ChessCase
 
@@ -76,8 +77,9 @@ class CodeCheck():
             # self.agent.go(np.copy(chessboard))
             timeout(self.time_out)(self.agent.go)(np.copy(chessboard))
         except Exception:
-            self.errormsg = "Error:" + traceback.format_exc()
-            return False
+            if len(self.agent.candidate_list) == 0:
+                self.errormsg = "Error: Time out and candidate list empty." + traceback.format_exc()
+                return False
         return True
     
     def __check_result (self, chessboard, result):
@@ -118,3 +120,22 @@ class CodeCheck():
                 print((case.get_board(), case.get_rational_steps()))
                 return False
         return True
+
+
+if __name__ == '__main__':
+    path = sys.argv[1]
+    sid = sys.argv[2]
+    info = ""
+    is_pass = False
+    code_checker = CodeCheck("{}/{}.py".format(path, sid), 15)
+    if not code_checker.check_code():
+        print(code_checker.errormsg)
+        info = code_checker.errormsg
+    else:
+        print('pass')
+        info = 'Upload success, usability test pass.'
+        is_pass = True
+
+    socketIO = SocketIO('localhost', 8080)
+    socketIO.emit("upload_test", {'sid': sid, 'info': info, 'is_pass': is_pass})
+    socketIO.wait(seconds=1)

@@ -9,7 +9,7 @@ import time
 import traceback
 
 import numpy as np
-import psutil
+# import psutil
 import timeout_decorator
 from socketIO_client import SocketIO, BaseNamespace
 from timeout_decorator import timeout
@@ -41,7 +41,8 @@ def stop_thread(thread):
 
 
 def get_mem():
-    return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
+    # return psutil.Process(os.getpid()).memory_info().rss/(1024**2)
+    return 0
 
 
 def deal_with_memory_out(size):
@@ -313,12 +314,6 @@ def fight (begin_data):
                 break
             #print(go_data)
 
-    socketIO.emit("finish", god.finish)
-    if god.error:
-        error_data = begin_data + [god.error]
-        socketIO.emit("error", error_data)
-        #print(error_data)
-
 
 if __name__ == '__main__':
     def deal_go_data(go_data):
@@ -357,19 +352,21 @@ if __name__ == '__main__':
 
     except Exception:
         god.finish = begin_data + [0, 0]
-        socketIO.emit("error", begin_data + ['Platfrom error,please contact administrator. ' + traceback.format_exc()])
         socketIO.emit("finish", god.finish)
+        socketIO.emit("error", begin_data + ['Platform error, please contact administrator. ' + traceback.format_exc()])
 
     if god.finish:
-        while True:
+        while control_thread.is_alive():
             try:
                 stop_thread(control_thread)
                 break
             except Exception:
                 print(traceback.format_exc())
         socketIO.emit("finish", god.finish)
+        if god.error:
+            error_data = begin_data + [god.error]
+            socketIO.emit("error", error_data)
         socketIO.wait(seconds=1)
         socketIO.disconnect()
-        socketIO.wait(seconds=1)
 
     socketIO.wait(seconds=600)

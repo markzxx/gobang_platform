@@ -1,8 +1,6 @@
 import numpy as np
 import random
-import time
 
-import queue
 
 class AI(object):
     def __init__(self, chessboard_size, color, time_out):
@@ -26,7 +24,7 @@ class AI(object):
         self.chessboard = chessboard
         idx = np.where(self.chessboard == 0)
         idx = list(zip(idx[0], idx[1]))
-        pos_idx = random.randint(0, len(idx)-1)
+        pos_idx = random.randint(0, len(idx) - 1)
         new_pos = idx[pos_idx]
         assert self.chessboard[new_pos[0],new_pos[1]]==0
         self.candidate_list.append(new_pos)

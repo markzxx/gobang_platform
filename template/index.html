@@ -151,7 +151,7 @@
               <p>
                 <span style="margin-left:20px;margin-top:20px;"><h3>Game Status: </h3></span>
                 <br />
-                <h3><span id="current_status" style="position:relative;margin-top:40px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;not Started</span></h3>
+                <h3><p id="current_status" style="position:relative;margin-left:40px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;not Started</p></h3>
                 <br/>
                 <br/>
                 <h3>White：<span id="player-status1"># </span></h3>
@@ -178,7 +178,6 @@
                 <button class="btn btn-primary" type="button" onclick="$('#code').trigger('click');" id="trigger_code" name="trigger_code" style="background-color:#1ABC9C;"><i class="glyphicon glyphicon-upload"></i>&nbsp;Upload Code</button>
                   <form id="codeform" action="upload" method="post" accept-charset="utf-8" enctype="multipart/form-data" style="display:none">
                   <p id='watch_id' data-id={{sid}} visibility=false></p>
-                  <span>Upload Your Code (only one .py file is required)</span>
                   <input type="file" id="code" name="code" style="visibility:hidden" onchange="filepath.value=this.value;$('#upload_submit').trigger('click');">
                   <input type="textfield" id="filepath">
                       <!--<input type="button" id="filebutton" value="choose file" onclick="code.click()">-->
@@ -210,10 +209,6 @@
         <!-- /.modal-content -->
       </div>
       <!-- /.modal-dialog -->
-        <form id="myForm">
-            <input type="file" id="u_photo" name="u_photo"/>
-            <input type="button" id="submit-btn" value="上传"/>
-        </form>
     </div>
     <!-- /.modal -->
     <!-- /.modal -->
